@@ -4,6 +4,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import { glob } from 'glob';
 import path from 'path';
 import fs from 'fs/promises';
+import { execSync } from 'child_process';
 
 export interface UploadResult {
   originalName: string;
@@ -26,11 +27,36 @@ function configureCloudinary() {
   });
 }
 
+async function convertHeicToJpg(filePath: string): Promise<string> {
+  const tmpDir = '/tmp/blog-image-convert';
+  await fs.mkdir(tmpDir, { recursive: true });
+  const outputPath = path.join(tmpDir, `${path.basename(filePath, path.extname(filePath))}.jpg`);
+  execSync(`sips -s format jpeg "${filePath}" --out "${outputPath}" --setProperty formatOptions 90`, {
+    stdio: 'pipe',
+  });
+  return outputPath;
+}
+
 async function convertAndResize(filePath: string): Promise<Buffer> {
-  return sharp(filePath)
+  const ext = path.extname(filePath).toLowerCase();
+  let inputPath = filePath;
+
+  // HEIC → JPG via macOS sips (sharp doesn't support HEIC natively)
+  if (ext === '.heic') {
+    inputPath = await convertHeicToJpg(filePath);
+  }
+
+  const buffer = await sharp(inputPath)
     .resize({ width: 1600, withoutEnlargement: true })
     .jpeg({ quality: 85 })
     .toBuffer();
+
+  // Clean up temp file
+  if (inputPath !== filePath) {
+    await fs.unlink(inputPath).catch(() => {});
+  }
+
+  return buffer;
 }
 
 async function uploadToCloudinary(
