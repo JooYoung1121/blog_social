@@ -10,5 +10,25 @@
 </head>
 <body>
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+  <script>
+    // GitHub OAuth 토큰 장기 유지: localStorage 값을 7일간 보존
+    (function() {
+      var TOKEN_KEY = 'netlify-cms-user';
+      var EXPIRY_KEY = 'netlify-cms-user-expiry';
+      var DAYS = 7;
+
+      var stored = localStorage.getItem(TOKEN_KEY);
+      var expiry = localStorage.getItem(EXPIRY_KEY);
+
+      if (stored && (!expiry || Date.now() < Number(expiry))) {
+        // 토큰 유효 — 만료 시간 갱신 (방문할 때마다 7일 연장)
+        localStorage.setItem(EXPIRY_KEY, String(Date.now() + DAYS * 86400000));
+      } else if (expiry && Date.now() >= Number(expiry)) {
+        // 만료됨 — 토큰 삭제하여 재로그인 유도
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(EXPIRY_KEY);
+      }
+    })();
+  </script>
 </body>
 </html>
