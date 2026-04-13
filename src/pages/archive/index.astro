@@ -1,0 +1,125 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('posts', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const categoryLabels: Record<string, string> = {
+  'baby-products': '육아용품 리뷰',
+  parenting: '육아일기',
+  'daily-life': '일상',
+  food: '맛집/요리',
+  travel: '여행/나들이',
+};
+
+// Group by year-month
+const grouped = posts.reduce(
+  (acc, post) => {
+    const key = post.data.date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' });
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(post);
+    return acc;
+  },
+  {} as Record<string, typeof posts>,
+);
+---
+
+<BaseLayout title="아카이브">
+  <section class="archive container">
+    <h1>아카이브</h1>
+    <p class="subtitle">총 {posts.length}개의 글</p>
+
+    {Object.entries(grouped).map(([month, monthPosts]) => (
+      <div class="month-group">
+        <h2>{month}</h2>
+        <ul>
+          {monthPosts.map((post) => (
+            <li>
+              <a href={`/posts/${post.id}`}>
+                <time datetime={post.data.date.toISOString()}>
+                  {post.data.date.toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' })}
+                </time>
+                <span class={`badge badge--${post.data.category}`}>
+                  {categoryLabels[post.data.category] || post.data.category}
+                </span>
+                <span class="title">{post.data.title}</span>
+                {post.data.sponsored && <span class="sponsored-dot">협찬</span>}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </section>
+</BaseLayout>
+
+<style>
+  .archive {
+    padding: 2rem 0 4rem;
+  }
+
+  .archive h1 {
+    font-size: 2rem;
+  }
+
+  .subtitle {
+    color: var(--color-text-light);
+    margin-top: 0.3rem;
+  }
+
+  .month-group {
+    margin-top: 2rem;
+  }
+
+  .month-group h2 {
+    font-size: 1.2rem;
+    color: var(--color-accent);
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  ul {
+    list-style: none;
+    margin-top: 0.75rem;
+  }
+
+  li + li {
+    margin-top: 0.5rem;
+  }
+
+  li a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.8rem;
+    border-radius: 8px;
+    color: var(--color-text);
+    transition: background 0.15s;
+  }
+
+  li a:hover {
+    background: var(--color-accent-light);
+    opacity: 1;
+  }
+
+  time {
+    font-size: 0.8rem;
+    color: var(--color-text-light);
+    flex-shrink: 0;
+    width: 3.5rem;
+  }
+
+  .title {
+    flex: 1;
+    font-weight: 500;
+  }
+
+  .sponsored-dot {
+    font-size: 0.7rem;
+    background: var(--color-sponsor);
+    color: #fff;
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+  }
+</style>

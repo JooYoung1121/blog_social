@@ -1,0 +1,76 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostCard from '../components/PostCard.astro';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('posts', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+---
+
+<BaseLayout title="홈">
+  <section class="hero container">
+    <h1>지나의 휴일</h1>
+    <p class="hero-desc">육아, 일상, 솔직한 리뷰를 기록합니다 ✨</p>
+  </section>
+
+  <section class="posts-grid container">
+    {posts.length === 0 && <p class="empty">아직 글이 없어요. 첫 글을 기다려주세요!</p>}
+    <div class="grid">
+      {posts.map((post) => (
+        <PostCard
+          title={post.data.title}
+          description={post.data.description}
+          date={post.data.date}
+          category={post.data.category}
+          thumbnail={post.data.thumbnail}
+          slug={post.id}
+          sponsored={post.data.sponsored}
+        />
+      ))}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero {
+    text-align: center;
+    padding: 3rem 0 2rem;
+  }
+
+  .hero h1 {
+    font-size: 2.5rem;
+    font-family: var(--font-serif);
+  }
+
+  .hero-desc {
+    margin-top: 0.5rem;
+    color: var(--color-text-light);
+    font-size: 1.1rem;
+  }
+
+  .posts-grid {
+    padding-bottom: 3rem;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+
+  .empty {
+    text-align: center;
+    color: var(--color-text-light);
+    margin-top: 3rem;
+  }
+
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 600px) {
+    .grid { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 1.8rem; }
+  }
+</style>

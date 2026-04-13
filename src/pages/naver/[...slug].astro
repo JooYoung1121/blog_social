@@ -1,0 +1,87 @@
+---
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts', ({ data }) => !data.draft);
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+
+const categoryLabels: Record<string, string> = {
+  'baby-products': '육아용품 리뷰',
+  parenting: '육아일기',
+  'daily-life': '일상',
+  food: '맛집/요리',
+  travel: '여행/나들이',
+};
+---
+
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>{post.data.title} — 네이버 복붙용</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap"
+    />
+    <style>
+      body {
+        font-family: 'Noto Sans KR', sans-serif;
+        max-width: 700px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        line-height: 1.9;
+        color: #333;
+      }
+      .guide {
+        background: #f5f5f5;
+        border: 1px solid #ddd;
+        padding: 1rem;
+        margin-bottom: 2rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+      }
+      .guide h3 { margin: 0 0 0.5rem; }
+      .guide ol { padding-left: 1.2rem; }
+      img { max-width: 100%; margin: 1rem 0; border-radius: 8px; }
+      h1 { font-size: 1.5rem; border-bottom: 2px solid #eee; padding-bottom: 0.5rem; }
+      h2 { font-size: 1.2rem; margin-top: 2rem; }
+      p { margin: 0.8rem 0; }
+    </style>
+  </head>
+  <body>
+    <div class="guide">
+      <h3>📋 네이버 블로그 업로드 가이드</h3>
+      <p><strong>카테고리:</strong> {categoryLabels[post.data.category]}</p>
+      {post.data.sponsored && post.data.sponsorInfo && (
+        <p><strong>⚠️ 협찬 고지:</strong> {post.data.sponsorInfo}</p>
+      )}
+      {post.data.images.length > 0 && (
+        <>
+          <p><strong>📷 사진 업로드 순서:</strong></p>
+          <ol>
+            {post.data.images.map((url, i) => (
+              <li>
+                photo_{String(i + 1).padStart(2, '0')}
+                {i === 0 ? ' (썸네일)' : ''}
+              </li>
+            ))}
+          </ol>
+        </>
+      )}
+      {post.data.productLink && (
+        <p><strong>🔗 제품 링크:</strong> {post.data.productLink}</p>
+      )}
+    </div>
+
+    <h1>{post.data.title}</h1>
+    <Content />
+  </body>
+</html>
