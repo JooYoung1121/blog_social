@@ -24,6 +24,20 @@ collections:
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
     sortable_fields: ["date", "title"]
+    view_groups:
+      - label: 년월
+        field: date
+        pattern: '\d{4}-\d{2}'
+    view_filters:
+      - label: 육아용품 리뷰
+        field: category
+        pattern: baby-products
+      - label: 육아일기
+        field: category
+        pattern: parenting
+      - label: 일상
+        field: category
+        pattern: daily-life
     fields:
       - { label: 제목, name: title, widget: string }
       - { label: 설명, name: description, widget: string }
