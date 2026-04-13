@@ -1,0 +1,180 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import SponsorBadge from '../components/SponsorBadge.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  date: Date;
+  category: string;
+  tags: string[];
+  thumbnail: string;
+  sponsored: boolean;
+  sponsorInfo?: string;
+  productLink?: string;
+  naverPostUrl?: string;
+}
+
+const {
+  title,
+  description,
+  date,
+  category,
+  tags,
+  thumbnail,
+  sponsored,
+  sponsorInfo,
+  productLink,
+  naverPostUrl,
+} = Astro.props;
+
+const categoryLabels: Record<string, string> = {
+  'baby-products': '육아용품 리뷰',
+  parenting: '육아일기',
+  'daily-life': '일상',
+  food: '맛집/요리',
+  travel: '여행/나들이',
+};
+
+const formattedDate = date.toLocaleDateString('ko-KR', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+<BaseLayout title={title} description={description} ogImage={thumbnail}>
+  <article class="post">
+    {sponsored && sponsorInfo && <SponsorBadge info={sponsorInfo} />}
+
+    <header class="post-header content-width">
+      <span class={`badge badge--${category}`}>
+        {categoryLabels[category] || category}
+      </span>
+      <h1>{title}</h1>
+      <time datetime={date.toISOString()}>{formattedDate}</time>
+      {tags.length > 0 && (
+        <div class="tags">
+          {tags.map((tag) => (
+            <span class="tag">#{tag}</span>
+          ))}
+        </div>
+      )}
+    </header>
+
+    {thumbnail && (
+      <div class="hero-image container">
+        <img src={thumbnail} alt={title} loading="eager" />
+      </div>
+    )}
+
+    <div class="post-body content-width">
+      <slot />
+    </div>
+
+    <footer class="post-footer content-width">
+      {productLink && (
+        <a href={productLink} target="_blank" rel="noopener" class="product-link">
+          🛒 제품 보러가기
+        </a>
+      )}
+      {naverPostUrl && (
+        <a href={naverPostUrl} target="_blank" rel="noopener" class="naver-link">
+          📝 네이버 블로그에서 보기
+        </a>
+      )}
+    </footer>
+  </article>
+</BaseLayout>
+
+<style>
+  .post-header {
+    padding-top: 2rem;
+    text-align: center;
+  }
+
+  .post-header h1 {
+    margin-top: 0.75rem;
+    font-size: 2rem;
+  }
+
+  .post-header time {
+    display: block;
+    margin-top: 0.5rem;
+    color: var(--color-text-light);
+    font-size: 0.9rem;
+  }
+
+  .tags {
+    margin-top: 0.75rem;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    color: var(--color-accent);
+    font-size: 0.85rem;
+  }
+
+  .hero-image {
+    margin-top: 2rem;
+    max-width: 900px;
+  }
+
+  .hero-image img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+  }
+
+  .post-body {
+    margin-top: 2.5rem;
+  }
+
+  .post-body :global(p) {
+    margin-top: 1.2rem;
+    font-size: 1.05rem;
+  }
+
+  .post-body :global(img) {
+    margin: 1.5rem 0;
+    border-radius: var(--radius);
+  }
+
+  .post-body :global(h2) {
+    margin-top: 2.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--color-accent-light);
+  }
+
+  .post-body :global(h3) {
+    margin-top: 1.8rem;
+  }
+
+  .post-footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .product-link,
+  .naver-link {
+    display: inline-block;
+    padding: 0.6rem 1.2rem;
+    background: var(--color-accent-light);
+    border-radius: var(--radius);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 768px) {
+    .post-header h1 {
+      font-size: 1.5rem;
+    }
+  }
+</style>

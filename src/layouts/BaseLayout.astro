@@ -1,0 +1,118 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+}
+
+const { title, description = '지나의 휴일 — 육아, 일상, 리뷰 블로그', ogImage } = Astro.props;
+---
+
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link
+      rel="stylesheet"
+      as="style"
+      crossorigin
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&display=swap"
+    />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <title>{title} | 지나의 휴일</title>
+  </head>
+  <body>
+    <slot name="header">
+      <header class="site-header">
+        <div class="container">
+          <a href="/" class="logo">지나의 휴일</a>
+          <nav>
+            <a href="/">홈</a>
+            <a href="/archive">아카이브</a>
+          </nav>
+        </div>
+      </header>
+    </slot>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p>&copy; {new Date().getFullYear()} 지나의 휴일. All rights reserved.</p>
+        <p class="naver-link">
+          <a href="https://blog.naver.com/snf00467" target="_blank" rel="noopener">
+            네이버 블로그
+          </a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style is:global>
+  @import '../styles/global.css';
+</style>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    background: rgba(250, 248, 245, 0.95);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--color-border);
+    z-index: 100;
+    padding: 0.8rem 0;
+  }
+
+  .site-header .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-family: var(--font-serif);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  nav {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  nav a {
+    color: var(--color-text-light);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  nav a:hover {
+    color: var(--color-text);
+  }
+
+  .site-footer {
+    margin-top: 4rem;
+    padding: 2rem 0;
+    border-top: 1px solid var(--color-border);
+    text-align: center;
+    color: var(--color-text-light);
+    font-size: 0.85rem;
+  }
+
+  .naver-link {
+    margin-top: 0.5rem;
+  }
+</style>
