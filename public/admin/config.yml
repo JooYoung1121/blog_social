@@ -25,11 +25,7 @@ collections:
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
     meta: { path: { widget: string, label: 경로, index_file: "" } }
-    sortable_fields:
-      fields: ["date", "title"]
-      default:
-        field: date
-        direction: Descending
+    sortable_fields: ["date", "title"]
     fields:
       - { label: 제목, name: title, widget: string }
       - { label: 설명, name: description, widget: string }
