@@ -25,7 +25,7 @@ images:
   - "https://res.cloudinary.com/diztnbres/image/upload/v1776080701/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_14.gif"
 sponsored: false
 productLink: "https://smartstore.naver.com/petinube/products/12964021865"
-draft: true
+draft: false
 ---
 
 안녕하세요!
