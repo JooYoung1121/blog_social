@@ -22,6 +22,7 @@ collections:
     nested:
       depth: 3
       summary: "{{title}}"
+    summary: "{{title}} ({{date}})"
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
     meta: { path: { widget: string, label: 경로, index_file: "" } }
@@ -40,7 +41,7 @@ collections:
           - { label: 맛집/요리, value: food }
           - { label: 여행/나들이, value: travel }
       - { label: 태그, name: tags, widget: list, default: [] }
-      - { label: 썸네일, name: thumbnail, widget: string }
+      - { label: 썸네일, name: thumbnail, widget: image }
       - { label: 이미지 목록, name: images, widget: list, field: { label: URL, name: url, widget: string }, default: [] }
       - { label: 협찬 여부, name: sponsored, widget: boolean, default: false }
       - { label: 협찬 정보, name: sponsorInfo, widget: string, required: false }
