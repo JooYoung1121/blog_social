@@ -19,7 +19,6 @@ collections:
     label: 블로그 글
     label_singular: 글
     folder: src/content/posts
-    path: "{{year}}/{{month}}/{{slug}}"
     summary: "{{title}} ({{date}})"
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
