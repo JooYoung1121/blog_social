@@ -19,10 +19,12 @@ collections:
     label: 블로그 글
     label_singular: 글
     folder: src/content/posts
-    path: "{{year}}/{{month}}/{{slug}}"
-    summary: "{{title}} ({{date}})"
+    nested:
+      depth: 3
+      summary: "{{title}} ({{date}})"
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    meta: { path: { widget: string, label: 경로, index_file: "" } }
     sortable_fields: ["date", "title"]
     fields:
       - { label: 제목, name: title, widget: string }
