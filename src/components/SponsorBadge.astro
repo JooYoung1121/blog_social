@@ -1,0 +1,21 @@
+---
+interface Props {
+  info: string;
+}
+
+const { info } = Astro.props;
+---
+
+<div class="sponsor-badge">
+  <p>※ 본 포스팅은 {info}으로 작성된 리뷰입니다.</p>
+</div>
+
+<style>
+  .sponsor-badge {
+    background: var(--color-sponsor);
+    color: #fff;
+    text-align: center;
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
+  }
+</style>

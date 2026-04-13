@@ -1,0 +1,46 @@
+---
+interface Props {
+  images: string[];
+  alt?: string;
+  columns?: 1 | 2 | 3;
+}
+
+const { images, alt = '사진', columns = 2 } = Astro.props;
+---
+
+<div class={`photo-grid photo-grid--${columns}`}>
+  {images.map((src, i) => (
+    <figure>
+      <img src={src} alt={`${alt} ${i + 1}`} loading="lazy" />
+    </figure>
+  ))}
+</div>
+
+<style>
+  .photo-grid {
+    display: grid;
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+  }
+
+  .photo-grid--1 { grid-template-columns: 1fr; }
+  .photo-grid--2 { grid-template-columns: repeat(2, 1fr); }
+  .photo-grid--3 { grid-template-columns: repeat(3, 1fr); }
+
+  figure {
+    margin: 0;
+    overflow: hidden;
+    border-radius: var(--radius);
+  }
+
+  figure img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 0;
+  }
+
+  @media (max-width: 600px) {
+    .photo-grid--3 { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
