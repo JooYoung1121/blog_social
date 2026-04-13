@@ -25,7 +25,7 @@ collections:
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
     sortable_fields: ["date", "title"]
     view_groups:
-      - label: 년월
+      - label: " "
         field: date
         pattern: '\d{4}-\d{2}'
     view_filters:
