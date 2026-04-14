@@ -13,6 +13,7 @@ interface PostConfig {
   sponsored?: boolean;
   sponsorInfo?: string;
   productLink?: string;
+  noTone?: boolean;
 }
 
 function parseArgs(): PostConfig {
@@ -49,6 +50,9 @@ function parseArgs(): PostConfig {
       case '--product-link':
         config.productLink = args[++i];
         break;
+      case '--no-tone':
+        config.noTone = true;
+        break;
     }
   }
 
@@ -67,6 +71,7 @@ Optional:
   --sponsored             협찬 글 여부
   --sponsor-info <info>   협찬 정보 (예: "브랜드명으로부터 제품을 협찬받아")
   --product-link <url>    제품 링크
+  --no-tone               사진 톤 보정 비활성화 (기본: 보정 적용)
 `);
     process.exit(1);
   }
@@ -167,12 +172,13 @@ async function main() {
   const slug = generateSlug(config.title || 'untitled');
   console.log(`📝 Slug: ${slug}`);
 
-  // Process images
+  // Process images (톤 보정 기본 적용, --no-tone 시 비활성화)
+  const tone = config.noTone ? false as const : undefined; // undefined → DEFAULT_TONE 사용
   let images: UploadResult[] = [];
   const photosDir = path.join(config.inputDir, 'photos');
   try {
     await fs.access(photosDir);
-    images = await processAndUpload(photosDir, slug);
+    images = await processAndUpload(photosDir, slug, tone);
   } catch {
     // Try input dir directly if no photos/ subfolder
     try {
@@ -181,7 +187,7 @@ async function main() {
         /\.(heic|jpg|jpeg|png)$/i.test(f),
       );
       if (hasImages) {
-        images = await processAndUpload(config.inputDir, slug);
+        images = await processAndUpload(config.inputDir, slug, tone);
       } else {
         console.log('📷 사진 없이 진행합니다 (나중에 추가 가능)');
       }

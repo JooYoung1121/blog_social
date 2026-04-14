@@ -5,6 +5,7 @@ import { glob } from 'glob';
 import path from 'path';
 import fs from 'fs/promises';
 import { execSync } from 'child_process';
+import { applyTone, DEFAULT_TONE, type ToneSettings } from './edit-photo.js';
 
 export interface UploadResult {
   originalName: string;
@@ -37,7 +38,7 @@ async function convertHeicToJpg(filePath: string): Promise<string> {
   return outputPath;
 }
 
-async function convertAndResize(filePath: string): Promise<Buffer> {
+async function convertAndResize(filePath: string, tone?: ToneSettings | false): Promise<Buffer> {
   const ext = path.extname(filePath).toLowerCase();
   let inputPath = filePath;
 
@@ -46,10 +47,22 @@ async function convertAndResize(filePath: string): Promise<Buffer> {
     inputPath = await convertHeicToJpg(filePath);
   }
 
-  const buffer = await sharp(inputPath)
-    .resize({ width: 1600, withoutEnlargement: true })
-    .jpeg({ quality: 85 })
-    .toBuffer();
+  let buffer: Buffer;
+
+  if (tone === false) {
+    // 톤 보정 없이 리사이즈만
+    buffer = await sharp(inputPath)
+      .resize({ width: 1600, withoutEnlargement: true })
+      .jpeg({ quality: 85 })
+      .toBuffer();
+  } else {
+    // 톤 보정 적용 후 리사이즈
+    const rawBuffer = await fs.readFile(inputPath);
+    buffer = await applyTone(rawBuffer, tone || DEFAULT_TONE)
+      .resize({ width: 1600, withoutEnlargement: true })
+      .jpeg({ quality: 85 })
+      .toBuffer();
+  }
 
   // Clean up temp file
   if (inputPath !== filePath) {
@@ -89,6 +102,7 @@ async function uploadToCloudinary(
 export async function processAndUpload(
   inputDir: string,
   slug: string,
+  tone?: ToneSettings | false,
 ): Promise<UploadResult[]> {
   configureCloudinary();
 
@@ -114,7 +128,7 @@ export async function processAndUpload(
 
     console.log(`  [${i + 1}/${files.length}] ${originalName} → ${baseName}.jpg`);
 
-    const buffer = await convertAndResize(file);
+    const buffer = await convertAndResize(file, tone);
     const { url, width, height } = await uploadToCloudinary(buffer, folder, baseName);
 
     results.push({ originalName, cloudinaryUrl: url, width, height });
