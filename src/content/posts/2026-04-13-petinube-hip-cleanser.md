@@ -4,25 +4,25 @@ description: "아기엉덩이클렌저 쁘띠누베 비건 베리어 베이비 �
 date: 2026-04-13
 category: baby-products
 tags: ["아기엉덩이클렌저", "쁘띠누베", "힙클렌저", "베이비클렌저", "아기세정제", "육아템"]
-thumbnail: "https://res.cloudinary.com/diztnbres/image/upload/v1776080678/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_02.jpg"
+thumbnail: "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080678/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_02.jpg"
 images:
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776080677/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_01.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776080678/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_02.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776080679/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_03.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776080680/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_04.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776080681/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_05.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776080681/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_06.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776080682/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_07.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776080683/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_08.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776080684/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_09.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776080685/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_10.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776080685/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_11.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776080704/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_4.gif"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776080707/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_5.gif"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776080708/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_8-2.gif"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776080698/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_10.gif"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776080700/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_12.gif"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776080701/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_14.gif"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080677/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_01.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080678/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_02.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080679/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_03.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080680/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_04.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080681/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_05.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080681/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_06.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080682/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_07.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080683/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_08.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080684/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_09.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080685/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_10.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080685/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_11.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080704/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_4.gif"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080707/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_5.gif"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080708/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_8-2.gif"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080698/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_10.gif"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080700/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_12.gif"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080701/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_14.gif"
 sponsored: false
 productLink: "https://smartstore.naver.com/petinube/products/12964021865"
 draft: false
@@ -35,7 +35,7 @@ draft: false
 
 ## 비누로 엉덩이 닦던 시절...
 
-![기존에 사용하던 아기 비누](https://res.cloudinary.com/diztnbres/image/upload/v1776080681/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_05.jpg)
+![기존에 사용하던 아기 비누](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080681/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_05.jpg)
 
 사실 저도 처음엔 아기 비누로 봄이 엉덩이를 닦아줬거든요? 목욕할 때도 쓰고, 기저귀 갈 때 대변 보면 비누로 씻겨주곤 했는데...
 
@@ -45,23 +45,23 @@ draft: false
 
 ## 쁘띠누베 비건 베리어 아기엉덩이클렌저 선택!
 
-![쁘띠누베 비건 베리어 아기엉덩이클렌저 세트](https://res.cloudinary.com/diztnbres/image/upload/v1776080678/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_02.jpg)
+![쁘띠누베 비건 베리어 아기엉덩이클렌저 세트](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080678/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_02.jpg)
 
 여러 제품 비교하다가 최종 선택한 건 **쁘띠누베 비건 베리어 베이비 엉덩이 클렌저 세트**! 비건 인증에 대장균 99% 감소, 독일 더마테스트 인증까지 받은 제품이라 믿고 골랐어요.
 
-![쁘띠누베 아기엉덩이클렌저 박스와 구성품](https://res.cloudinary.com/diztnbres/image/upload/v1776080677/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_01.jpg)
+![쁘띠누베 아기엉덩이클렌저 박스와 구성품](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080677/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_01.jpg)
 
 박스 디자인이 무지개 그림에 아기 일러스트라 너무 귀엽더라구요 ㅎㅎ 선물용으로도 괜찮을 것 같아요!
 
 ## 세트 구성 — 본품 + 리필 + 휴대용
 
-![쁘띠누베 아기엉덩이클렌저 세트 구성 비교](https://res.cloudinary.com/diztnbres/image/upload/v1776080682/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_07.jpg)
+![쁘띠누베 아기엉덩이클렌저 세트 구성 비교](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080682/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_07.jpg)
 
 세트 구성은 **본품 300ml + 리필 250ml + 휴대용 45ml** 이렇게 세 가지예요!
 
 왼쪽부터 휴대용, 본품, 리필용인데 사이즈 비교가 한눈에 되시죠? 본품은 집에서 쓰고, 리필은 다 쓰면 채워 넣고, 휴대용은 외출할 때 기저귀 가방에 넣으면 됩니다!
 
-![쁘띠누베 아기엉덩이클렌저 화장실 배치](https://res.cloudinary.com/diztnbres/image/upload/v1776080681/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_06.jpg)
+![쁘띠누베 아기엉덩이클렌저 화장실 배치](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080681/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_06.jpg)
 
 저는 화장실 세면대 옆에 이렇게 나란히 놓고 쓰고 있어요. 기저귀 갈 때 바로 손 닿는 곳에 두니까 비누 쓰던 때보다 훨씬 편해요.
 
@@ -69,25 +69,25 @@ draft: false
 
 ## 아기엉덩이클렌저 제품 살펴보기
 
-![쁘띠누베 아기엉덩이클렌저 본품 300ml](https://res.cloudinary.com/diztnbres/image/upload/v1776080683/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_08.jpg)
+![쁘띠누베 아기엉덩이클렌저 본품 300ml](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080683/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_08.jpg)
 
 본품 300ml는 이렇게 생겼어요. 노란 펌프에 흰색 바디라 깔끔하고, 한 손으로 펌핑하기 딱 좋은 사이즈예요.
 
-![쁘띠누베 아기엉덩이클렌저 본품과 박스](https://res.cloudinary.com/diztnbres/image/upload/v1776080684/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_09.jpg)
+![쁘띠누베 아기엉덩이클렌저 본품과 박스](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080684/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_09.jpg)
 
 300ml면 넉넉해서 하루에 3~4번 기저귀 갈 때 쓴다고 해도 꽤 오래 가거든요. 다 쓰면 리필용으로 채우면 되니까 걱정 없어요!
 
-![쁘띠누베 아기엉덩이클렌저 펌프 오픈](https://res.cloudinary.com/diztnbres/image/upload/v1776080685/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_10.jpg)
+![쁘띠누베 아기엉덩이클렌저 펌프 오픈](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080685/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_10.jpg)
 
 펌프 뚜껑이 분리되는 구조라 리필할 때 편하고, 위생적으로 관리할 수 있어요. 비누처럼 물기 있는 채로 방치되는 일이 없으니까 세균 걱정도 줄어들더라구요.
 
-![쁘띠누베 아기엉덩이클렌저 펌핑하는 모습](https://res.cloudinary.com/diztnbres/image/upload/v1776080708/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_8-2.gif)
+![쁘띠누베 아기엉덩이클렌저 펌핑하는 모습](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080708/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_8-2.gif)
 
 한 번 누르면 이렇게 바로 부드러운 거품이 나와요! 비누처럼 손으로 비벼서 거품 낼 필요 없이 **펌핑 한 번이면 끝**이라 기저귀 갈 때 진짜 편해요.
 
 ## 성분 꼼꼼히 따져봤어요
 
-![쁘띠누베 아기엉덩이클렌저 뒷면 성분 정보](https://res.cloudinary.com/diztnbres/image/upload/v1776080685/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_11.jpg)
+![쁘띠누베 아기엉덩이클렌저 뒷면 성분 정보](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080685/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_11.jpg)
 
 아기 피부에 직접 닿는 거라 성분을 꼼꼼히 봤는데요, 뒷면에 핵심 포인트가 정리되어 있어요!
 
@@ -101,35 +101,35 @@ draft: false
 
 ## 거품 타입이라 사용감이 다르더라구요
 
-![쁘띠누베 아기엉덩이클렌저 거품 텍스처 클로즈업](https://res.cloudinary.com/diztnbres/image/upload/v1776080679/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_03.jpg)
+![쁘띠누베 아기엉덩이클렌저 거품 텍스처 클로즈업](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080679/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_03.jpg)
 
 거품을 짜보면 이렇게 촘촘하고 밀도 높은 거품이 나와요. 물처럼 흘러내리지 않아서 아기 엉덩이에 올려놓으면 자리를 잡고 유지되거든요.
 
-![쁘띠누베 아기엉덩이클렌저 거품 사용](https://res.cloudinary.com/diztnbres/image/upload/v1776080698/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_10.gif)
+![쁘띠누베 아기엉덩이클렌저 거품 사용](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080698/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_10.gif)
 
 이게 비누랑 가장 큰 차이인데요 — 비누는 물 묻혀서 비벼야 거품이 나오잖아요? 이건 펌핑하면 바로 거품이 나오니까 물 없이도 쓸 수 있어요. 기저귀 교체대에서 바로 사용 가능한 게 진짜 큰 장점이에요.
 
 ## 봄이한테 실제로 써보니
 
-![쁘띠누베 아기엉덩이클렌저 실사용 거품 도포](https://res.cloudinary.com/diztnbres/image/upload/v1776080704/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_4.gif)
+![쁘띠누베 아기엉덩이클렌저 실사용 거품 도포](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080704/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_4.gif)
 
 기저귀 갈 때 한 번 펌핑해서 거품을 엉덩이에 올려주고, 부드럽게 닦아주면 돼요. 거품이 흘러내리지 않아서 한 손으로 아기 다리 잡고 한 손으로 펌핑하는 게 가능하더라구요!
 
-![쁘띠누베 아기엉덩이클렌저 세정 모습](https://res.cloudinary.com/diztnbres/image/upload/v1776080707/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_5.gif)
+![쁘띠누베 아기엉덩이클렌저 세정 모습](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080707/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_5.gif)
 
 거품이 오염물을 감싸서 닦아내는 느낌이라 물티슈로 여러 번 문지르는 것보다 자극이 훨씬 적어요. 봄이도 싫어하지 않고 편하게 기저귀 갈아줄 수 있었어요 ㅋㅋ
 
-![쁘띠누베 아기엉덩이클렌저 마무리 닦기](https://res.cloudinary.com/diztnbres/image/upload/v1776080700/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_12.gif)
+![쁘띠누베 아기엉덩이클렌저 마무리 닦기](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080700/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_12.gif)
 
 거품으로 세정한 후에 물티슈로 한 번 가볍게 마무리해주면 끝! 비누 쓸 때는 물로 헹궈줘야 해서 번거로웠는데, **아기엉덩이클렌저**는 닦아내기만 하면 되니까 훨씬 간편해요.
 
-![쁘띠누베 아기엉덩이클렌저 사용 완료](https://res.cloudinary.com/diztnbres/image/upload/v1776080701/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_14.gif)
+![쁘띠누베 아기엉덩이클렌저 사용 완료](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080701/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_14.gif)
 
 쓰기 시작하고 나서 봄이 엉덩이가 확실히 뽀얗고 깨끗해진 느낌이에요. 기저귀 발진도 이전보다 덜 생기는 것 같구요 ✨
 
 ## 외출할 때도 챙겨가요
 
-![쁘띠누베 아기엉덩이클렌저 본품과 휴대용 비교](https://res.cloudinary.com/diztnbres/image/upload/v1776080680/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_04.jpg)
+![쁘띠누베 아기엉덩이클렌저 본품과 휴대용 비교](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080680/blog/2026/04/2026-04-13-petinube-hip-cleanser/photo_04.jpg)
 
 이 세트의 또 다른 장점은 **45ml 휴대용**이 포함된 것! 기저귀 가방에 쏙 들어가는 사이즈라 외출할 때도 아기엉덩이클렌저를 챙길 수 있어요.
 

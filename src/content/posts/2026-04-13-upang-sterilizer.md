@@ -4,26 +4,26 @@ description: "젖병소독기 유팡 시그니처2 플러스 4개월 실사용 �
 date: 2026-04-13
 category: baby-products
 tags: ["젖병소독기", "유팡", "시그니처2", "UV소독기", "육아템", "젖병살균기"]
-thumbnail: "https://res.cloudinary.com/diztnbres/image/upload/v1776087146/blog/2026/04/2026-04-13-upang-sterilizer/photo_04.jpg"
+thumbnail: "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087146/blog/2026/04/2026-04-13-upang-sterilizer/photo_04.jpg"
 images:
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776087143/blog/2026/04/2026-04-13-upang-sterilizer/photo_01.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776087144/blog/2026/04/2026-04-13-upang-sterilizer/photo_02.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776087145/blog/2026/04/2026-04-13-upang-sterilizer/photo_03.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776087146/blog/2026/04/2026-04-13-upang-sterilizer/photo_04.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776087147/blog/2026/04/2026-04-13-upang-sterilizer/photo_05.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776087150/blog/2026/04/2026-04-13-upang-sterilizer/photo_06.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776087151/blog/2026/04/2026-04-13-upang-sterilizer/photo_07.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776087152/blog/2026/04/2026-04-13-upang-sterilizer/photo_08.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776087153/blog/2026/04/2026-04-13-upang-sterilizer/photo_09.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776087154/blog/2026/04/2026-04-13-upang-sterilizer/photo_10.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776087156/blog/2026/04/2026-04-13-upang-sterilizer/photo_11.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776087157/blog/2026/04/2026-04-13-upang-sterilizer/photo_12.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776087158/blog/2026/04/2026-04-13-upang-sterilizer/photo_13.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776087160/blog/2026/04/2026-04-13-upang-sterilizer/photo_14.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776087162/blog/2026/04/2026-04-13-upang-sterilizer/photo_15.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776087163/blog/2026/04/2026-04-13-upang-sterilizer/photo_16.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776087165/blog/2026/04/2026-04-13-upang-sterilizer/photo_17.jpg"
-  - "https://res.cloudinary.com/diztnbres/image/upload/v1776087167/blog/2026/04/2026-04-13-upang-sterilizer/photo_18.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087143/blog/2026/04/2026-04-13-upang-sterilizer/photo_01.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087144/blog/2026/04/2026-04-13-upang-sterilizer/photo_02.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087145/blog/2026/04/2026-04-13-upang-sterilizer/photo_03.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087146/blog/2026/04/2026-04-13-upang-sterilizer/photo_04.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087147/blog/2026/04/2026-04-13-upang-sterilizer/photo_05.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087150/blog/2026/04/2026-04-13-upang-sterilizer/photo_06.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087151/blog/2026/04/2026-04-13-upang-sterilizer/photo_07.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087152/blog/2026/04/2026-04-13-upang-sterilizer/photo_08.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087153/blog/2026/04/2026-04-13-upang-sterilizer/photo_09.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087154/blog/2026/04/2026-04-13-upang-sterilizer/photo_10.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087156/blog/2026/04/2026-04-13-upang-sterilizer/photo_11.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087157/blog/2026/04/2026-04-13-upang-sterilizer/photo_12.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087158/blog/2026/04/2026-04-13-upang-sterilizer/photo_13.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087160/blog/2026/04/2026-04-13-upang-sterilizer/photo_14.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087162/blog/2026/04/2026-04-13-upang-sterilizer/photo_15.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087163/blog/2026/04/2026-04-13-upang-sterilizer/photo_16.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087165/blog/2026/04/2026-04-13-upang-sterilizer/photo_17.jpg"
+  - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087167/blog/2026/04/2026-04-13-upang-sterilizer/photo_18.jpg"
 sponsored: false
 productLink: "https://brand.naver.com/upangkorea/products/10648644602"
 draft: false
@@ -54,37 +54,37 @@ draft: false
 
 ## 맘마존에 자리 잡은 유팡 시그니처2 — 사이즈 참고!
 
-![맘마존 선반 전체 모습 — 분유제조기, 유팡 소독기 등 배치](https://res.cloudinary.com/diztnbres/image/upload/v1776087143/blog/2026/04/2026-04-13-upang-sterilizer/photo_01.jpg)
+![맘마존 선반 전체 모습 — 분유제조기, 유팡 소독기 등 배치](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087143/blog/2026/04/2026-04-13-upang-sterilizer/photo_01.jpg)
 
 저희 맘마존 선반이에요! 왼쪽부터 이유식마스터, 봄봄 분유제조기, 베이비브레짜, 그리고 맨 오른쪽이 **유팡 시그니처2 플러스** 라이트그레이예요.
 
-![맘마존 정리된 모습 — 유팡 젖병소독기 크기 비교](https://res.cloudinary.com/diztnbres/image/upload/v1776087144/blog/2026/04/2026-04-13-upang-sterilizer/photo_02.jpg)
+![맘마존 정리된 모습 — 유팡 젖병소독기 크기 비교](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087144/blog/2026/04/2026-04-13-upang-sterilizer/photo_02.jpg)
 
 다른 제품들과 크기 비교가 되시죠? 유팡이 가장 크지만 그만큼 수납력이 좋아요. 선반 높이만 맞으면 딱 들어가요!
 
-![맘마존 배치 — 봄봄, 베이비브레짜, 유팡 나란히](https://res.cloudinary.com/diztnbres/image/upload/v1776087145/blog/2026/04/2026-04-13-upang-sterilizer/photo_03.jpg)
+![맘마존 배치 — 봄봄, 베이비브레짜, 유팡 나란히](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087145/blog/2026/04/2026-04-13-upang-sterilizer/photo_03.jpg)
 
 정면에서 보면 이렇게 깔끔하게 나란히 놓여있어요. 라이트그레이 색상이 흰색 주방과 잘 어울려서 만족!
 
-![유팡 시그니처2 젖병소독기 정면 크기 비교](https://res.cloudinary.com/diztnbres/image/upload/v1776087146/blog/2026/04/2026-04-13-upang-sterilizer/photo_04.jpg)
+![유팡 시그니처2 젖병소독기 정면 크기 비교](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087146/blog/2026/04/2026-04-13-upang-sterilizer/photo_04.jpg)
 
 봄봄, 베이비브레짜와 나란히 놓으면 유팡 크기가 확실히 느껴져요. 근데 젖병 12개를 넣으려면 이 정도 크기는 필요하더라구요!
 
 ## 유팡 시그니처2 플러스 — UPANG 로고와 외관 디테일
 
-![유팡 시그니처2 UPANG 로고 클로즈업](https://res.cloudinary.com/diztnbres/image/upload/v1776087147/blog/2026/04/2026-04-13-upang-sterilizer/photo_05.jpg)
+![유팡 시그니처2 UPANG 로고 클로즈업](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087147/blog/2026/04/2026-04-13-upang-sterilizer/photo_05.jpg)
 
 측면에 UPANG 로고가 양각으로 새겨져 있어요. 라이트그레이 색상에 은은하게 보이는 게 깔끔하고 고급스러워요.
 
 ## 처음 개봉할 때 — 보호필름 떼는 것도 잊지 마세요!
 
-![유팡 시그니처2 보호필름 제거 — 처음 사용 전 필수](https://res.cloudinary.com/diztnbres/image/upload/v1776087150/blog/2026/04/2026-04-13-upang-sterilizer/photo_06.jpg)
+![유팡 시그니처2 보호필름 제거 — 처음 사용 전 필수](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087150/blog/2026/04/2026-04-13-upang-sterilizer/photo_06.jpg)
 
 문을 열면 안쪽 유리에 "REMOVE Protection Film" 보호필름이 붙어있어요. **꼭 떼고 사용하세요!** 안 떼면 살균이 제대로 안 될 수 있어요.
 
 ## 내부 버튼은 딱 3개 — 소리, 밝기, 스팀!
 
-![유팡 시그니처2 내부 상단 버튼 — 소리/밝기/스팀 3개](https://res.cloudinary.com/diztnbres/image/upload/v1776087152/blog/2026/04/2026-04-13-upang-sterilizer/photo_08.jpg)
+![유팡 시그니처2 내부 상단 버튼 — 소리/밝기/스팀 3개](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087152/blog/2026/04/2026-04-13-upang-sterilizer/photo_08.jpg)
 
 문을 열면 상단에 버튼이 3개 있어요. 왼쪽부터 **소리**, **밝기**, **스팀** 버튼이에요. 심플한 구성이라 사용법이 어렵지 않아요!
 
@@ -92,31 +92,31 @@ draft: false
 
 ## 젖병소독기 작동하면 전면 LED가 이렇게 들어와요
 
-![유팡 시그니처2 LED 디스플레이 작동 중 — 진행률 표시](https://res.cloudinary.com/diztnbres/image/upload/v1776087153/blog/2026/04/2026-04-13-upang-sterilizer/photo_09.jpg)
+![유팡 시그니처2 LED 디스플레이 작동 중 — 진행률 표시](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087153/blog/2026/04/2026-04-13-upang-sterilizer/photo_09.jpg)
 
 문을 닫고 버튼을 누르면 전면에 LED 디스플레이가 뜨면서 진행 상태를 보여줘요. 살균 진행률이 바로 표시되니까 얼마나 남았는지 한눈에 알 수 있어요!
 
-![유팡 시그니처2 LED 세부 표시 — 시간, 모드, 진행률](https://res.cloudinary.com/diztnbres/image/upload/v1776087154/blog/2026/04/2026-04-13-upang-sterilizer/photo_10.jpg)
+![유팡 시그니처2 LED 세부 표시 — 시간, 모드, 진행률](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087154/blog/2026/04/2026-04-13-upang-sterilizer/photo_10.jpg)
 
 가까이서 보면 남은 시간, 현재 모드, 진행률 바까지 상세하게 표시돼요. 평소에는 LED가 꺼져있다가 터치하면 켜지는 방식이라 깔끔해요!
 
 ## UV 살균 모드 — 파란빛이 켜지면 살균 중이에요!
 
-![유팡 시그니처2 내부 빈 상태에서 UV 파란빛 작동](https://res.cloudinary.com/diztnbres/image/upload/v1776087156/blog/2026/04/2026-04-13-upang-sterilizer/photo_11.jpg)
+![유팡 시그니처2 내부 빈 상태에서 UV 파란빛 작동](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087156/blog/2026/04/2026-04-13-upang-sterilizer/photo_11.jpg)
 
 살균이 시작되면 내부에 파란빛이 들어와요! 이게 UV LED 살균인데, 처음 보면 좀 신기하더라구요 ㅋㅋ
 
-![유팡 시그니처2 UV 살균 중 — 내부 파란빛 클로즈업](https://res.cloudinary.com/diztnbres/image/upload/v1776087157/blog/2026/04/2026-04-13-upang-sterilizer/photo_12.jpg)
+![유팡 시그니처2 UV 살균 중 — 내부 파란빛 클로즈업](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087157/blog/2026/04/2026-04-13-upang-sterilizer/photo_12.jpg)
 
 3단 선반 전체에 UV가 골고루 비추는 구조예요. 상단에도 하단에도 빈틈없이 살균되는 느낌이에요.
 
-![유팡 시그니처2 살균 작동 중 — 적색 LED 빛](https://res.cloudinary.com/diztnbres/image/upload/v1776087158/blog/2026/04/2026-04-13-upang-sterilizer/photo_13.jpg)
+![유팡 시그니처2 살균 작동 중 — 적색 LED 빛](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087158/blog/2026/04/2026-04-13-upang-sterilizer/photo_13.jpg)
 
 건조 모드일 때는 이렇게 적색 빛이 들어와요. 살균(파란빛) → 건조(적색빛) 순서로 자동 진행되고, 끝나면 보관 모드로 전환돼요!
 
 ## 4개월 동안 매일 쓰고 있는 리얼 수납 모습이 궁금하시죠?
 
-![유팡 시그니처2 실사용 수납 — 젖병, 젖꼭지, 공갈 케이스 가득](https://res.cloudinary.com/diztnbres/image/upload/v1776087160/blog/2026/04/2026-04-13-upang-sterilizer/photo_14.jpg)
+![유팡 시그니처2 실사용 수납 — 젖병, 젖꼭지, 공갈 케이스 가득](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087160/blog/2026/04/2026-04-13-upang-sterilizer/photo_14.jpg)
 
 자 이게 저희가 실제로 매일 쓰는 모습이에요! UV 보라빛 속에 젖병이 가득 들어있는 거 보이시죠?
 
@@ -125,25 +125,25 @@ draft: false
 - **중단**: 젖병 본체 — 더블하트 젖병이 넉넉하게 들어감
 - **하단**: 뚜껑, 공갈 케이스, 작은 부속품 — 바스켓에 정리
 
-![유팡 시그니처2 상단 젖꼭지 걸이 클로즈업 — UV 살균 중](https://res.cloudinary.com/diztnbres/image/upload/v1776087165/blog/2026/04/2026-04-13-upang-sterilizer/photo_17.jpg)
+![유팡 시그니처2 상단 젖꼭지 걸이 클로즈업 — UV 살균 중](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087165/blog/2026/04/2026-04-13-upang-sterilizer/photo_17.jpg)
 
 상단 젖꼭지 전용 걸이가 진짜 편해요! 꼭지를 하나하나 걸어두면 물기가 아래로 빠지면서 건조도 빨리 되거든요. 아래로 떨어질 걱정도 없고요.
 
-![유팡 시그니처2 중단/하단 수납 클로즈업 — 젖병과 부속품](https://res.cloudinary.com/diztnbres/image/upload/v1776087162/blog/2026/04/2026-04-13-upang-sterilizer/photo_15.jpg)
+![유팡 시그니처2 중단/하단 수납 클로즈업 — 젖병과 부속품](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087162/blog/2026/04/2026-04-13-upang-sterilizer/photo_15.jpg)
 
 중단에 젖병 본체, 하단에 뚜껑이랑 공갈 케이스를 넣으면 딱 맞아요! 봄이 젖병을 하루치 전부 넣고도 공간이 남더라구요.
 
-![유팡 시그니처2 수납 — 젖병 뚜껑과 소품 바스켓](https://res.cloudinary.com/diztnbres/image/upload/v1776087163/blog/2026/04/2026-04-13-upang-sterilizer/photo_16.jpg)
+![유팡 시그니처2 수납 — 젖병 뚜껑과 소품 바스켓](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087163/blog/2026/04/2026-04-13-upang-sterilizer/photo_16.jpg)
 
 하단 바스켓에는 뚜껑 링이나 작은 소품들을 정리해서 넣을 수 있어요. 바스켓이 있어서 작은 부품이 아래로 빠질 일이 없어요!
 
-![유팡 시그니처2 전체 수납 모습 — 3단 가득 채운 상태](https://res.cloudinary.com/diztnbres/image/upload/v1776087167/blog/2026/04/2026-04-13-upang-sterilizer/photo_18.jpg)
+![유팡 시그니처2 전체 수납 모습 — 3단 가득 채운 상태](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087167/blog/2026/04/2026-04-13-upang-sterilizer/photo_18.jpg)
 
 문을 활짝 열고 전체 수납 모습이에요! 더블하트 240ml 젖병 기준으로 **8개 + 젖꼭지 + 부속품**까지 넉넉하게 들어가요. 대용량 **젖병소독기** 맞아요!
 
 ## 문 닫으면 유리창으로 안이 살짝 보여요
 
-![유팡 시그니처2 문 닫은 상태 — 빈 내부 유리창](https://res.cloudinary.com/diztnbres/image/upload/v1776087151/blog/2026/04/2026-04-13-upang-sterilizer/photo_07.jpg)
+![유팡 시그니처2 문 닫은 상태 — 빈 내부 유리창](https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087151/blog/2026/04/2026-04-13-upang-sterilizer/photo_07.jpg)
 
 문을 닫으면 이렇게 안이 살짝 비쳐 보여요. 살균 중일 때 빛이 은은하게 보이는 게 좋더라구요. 작동 중인지 한눈에 확인 가능!
 

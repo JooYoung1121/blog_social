@@ -88,8 +88,13 @@ async function uploadToCloudinary(
       (error, result) => {
         if (error) return reject(error);
         if (!result) return reject(new Error('No result from Cloudinary'));
+        // f_auto,q_auto: 브라우저별 최적 포맷 + 품질 자동 최적화
+        const optimizedUrl = result.secure_url.replace(
+          '/image/upload/',
+          '/image/upload/f_auto,q_auto/',
+        );
         resolve({
-          url: result.secure_url,
+          url: optimizedUrl,
           width: result.width,
           height: result.height,
         });
