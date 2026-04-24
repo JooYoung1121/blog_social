@@ -10,7 +10,7 @@
 </aside>
 
 <script>
-  document.addEventListener('astro:page-load', () => {
+  document.addEventListener('DOMContentLoaded', () => {
     const tocNav = document.getElementById('toc-nav');
     const tocSidebar = document.getElementById('toc-sidebar');
     if (!tocNav || !tocSidebar) return;

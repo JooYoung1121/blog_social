@@ -27,7 +27,7 @@ const siteUrl = 'https://jinas-holiday.vercel.app';
 <div class="share-toast" id="share-toast">링크가 복사되었어요!</div>
 
 <script>
-  document.addEventListener('astro:page-load', () => {
+  document.addEventListener('DOMContentLoaded', () => {
     // URL Copy
     document.querySelectorAll('.share-url').forEach((btn) => {
       btn.addEventListener('click', async () => {

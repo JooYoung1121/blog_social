@@ -35,7 +35,7 @@ const posts = (await getCollection('posts', ({ data }) => !data.draft))
 </dialog>
 
 <script define:vars={{ posts }}>
-  document.addEventListener('astro:page-load', () => {
+  document.addEventListener('DOMContentLoaded', () => {
     const trigger = document.getElementById('search-trigger');
     const dialog = document.getElementById('search-dialog');
     const input = document.getElementById('search-input');
