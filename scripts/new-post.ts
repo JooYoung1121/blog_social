@@ -98,6 +98,149 @@ function generateSlug(title: string): string {
   return `${date}-${slug}`;
 }
 
+// 카테고리별 본문 구조 템플릿
+const categoryTemplates: Record<string, (title: string, images: UploadResult[]) => string> = {
+  'baby-products': (title, images) => {
+    const photoBlocks = images.map(
+      (img, i) =>
+        `![photo_${String(i + 1).padStart(2, '0')}](${img.cloudinaryUrl})\n\n<!-- 사진 ${i + 1} 설명 -->`,
+    );
+    const mid = Math.ceil(photoBlocks.length / 3);
+    return [
+      '',
+      '안녕하세요!',
+      '지나의 휴일입니다 :)',
+      '',
+      `<!-- 도입부: 이 제품을 사게 된 계기/고민 -->`,
+      '',
+      ...photoBlocks.slice(0, mid),
+      '',
+      `## 실제 사용 후기`,
+      '',
+      `<!-- 본론: 사용감, 장점, 아쉬운 점 솔직하게 -->`,
+      '',
+      ...photoBlocks.slice(mid, mid * 2),
+      '',
+      `## 이런 분께 추천해요`,
+      '',
+      `<!-- 추천 대상, 활용 팁 -->`,
+      '',
+      ...photoBlocks.slice(mid * 2),
+      '',
+      '---',
+      '',
+      '오늘 포스팅은 여기서 마무리!',
+      '궁금한 점은 댓글로 남겨주세요 😊',
+      '그럼 안녕! 👋',
+    ].join('\n');
+  },
+  'parenting': (title, images) => {
+    const photoBlocks = images.map(
+      (img, i) =>
+        `![photo_${String(i + 1).padStart(2, '0')}](${img.cloudinaryUrl})\n\n<!-- 사진 ${i + 1} 설명 -->`,
+    );
+    return [
+      '',
+      '안녕하세요!',
+      '지나의 휴일입니다 :)',
+      '',
+      `<!-- 도입부: 요즘 아이 성장/변화 이야기 -->`,
+      '',
+      ...photoBlocks,
+      '',
+      '---',
+      '',
+      '오늘 포스팅은 여기서 마무리!',
+      '궁금한 점은 댓글로 남겨주세요 😊',
+      '그럼 안녕! 👋',
+    ].join('\n');
+  },
+  'food': (title, images) => {
+    const photoBlocks = images.map(
+      (img, i) =>
+        `![photo_${String(i + 1).padStart(2, '0')}](${img.cloudinaryUrl})\n\n<!-- 사진 ${i + 1} 설명 -->`,
+    );
+    const mid = Math.ceil(photoBlocks.length / 2);
+    return [
+      '',
+      '안녕하세요!',
+      '지나의 휴일입니다 :)',
+      '',
+      `<!-- 도입부: 방문 계기, 위치/분위기 -->`,
+      '',
+      ...photoBlocks.slice(0, mid),
+      '',
+      `## 메뉴 & 맛 후기`,
+      '',
+      `<!-- 주문한 메뉴, 맛 평가, 가성비 -->`,
+      '',
+      ...photoBlocks.slice(mid),
+      '',
+      '---',
+      '',
+      '오늘 포스팅은 여기서 마무리!',
+      '궁금한 점은 댓글로 남겨주세요 😊',
+      '그럼 안녕! 👋',
+    ].join('\n');
+  },
+  'travel': (title, images) => {
+    const photoBlocks = images.map(
+      (img, i) =>
+        `![photo_${String(i + 1).padStart(2, '0')}](${img.cloudinaryUrl})\n\n<!-- 사진 ${i + 1} 설명 -->`,
+    );
+    const third = Math.ceil(photoBlocks.length / 3);
+    return [
+      '',
+      '안녕하세요!',
+      '지나의 휴일입니다 :)',
+      '',
+      `<!-- 도입부: 여행지 소개, 방문 동기 -->`,
+      '',
+      ...photoBlocks.slice(0, third),
+      '',
+      `## 코스 & 즐길거리`,
+      '',
+      `<!-- 본론: 동선, 볼거리, 체험 -->`,
+      '',
+      ...photoBlocks.slice(third, third * 2),
+      '',
+      `## 꿀팁 정리`,
+      '',
+      `<!-- 방문 팁: 주차, 시간, 준비물 등 -->`,
+      '',
+      ...photoBlocks.slice(third * 2),
+      '',
+      '---',
+      '',
+      '오늘 포스팅은 여기서 마무리!',
+      '궁금한 점은 댓글로 남겨주세요 😊',
+      '그럼 안녕! 👋',
+    ].join('\n');
+  },
+};
+
+// 기본 템플릿 (daily-life 등)
+function defaultTemplate(title: string, images: UploadResult[]): string {
+  return [
+    '',
+    '안녕하세요!',
+    '지나의 휴일입니다 :)',
+    '',
+    `<!-- 도입부: 오늘의 이야기 -->`,
+    '',
+    ...images.map(
+      (img, i) =>
+        `![photo_${String(i + 1).padStart(2, '0')}](${img.cloudinaryUrl})\n\n<!-- 사진 ${i + 1} 설명 -->`,
+    ),
+    '',
+    '---',
+    '',
+    '오늘 포스팅은 여기서 마무리!',
+    '궁금한 점은 댓글로 남겨주세요 😊',
+    '그럼 안녕! 👋',
+  ].join('\n');
+}
+
 function generateMarkdown(
   config: PostConfig,
   images: UploadResult[],
@@ -123,29 +266,15 @@ function generateMarkdown(
     `sponsored: ${config.sponsored || false}`,
     config.sponsorInfo ? `sponsorInfo: "${config.sponsorInfo}"` : null,
     config.productLink ? `productLink: "${config.productLink}"` : null,
-    `draft: true`,
+    `draft: false`,
     '---',
   ]
     .filter(Boolean)
     .join('\n');
 
-  const body = [
-    '',
-    '안녕하세요!',
-    '지나의 휴일입니다 :)',
-    '',
-    '<!-- TODO: 본문을 작성하세요 -->',
-    '',
-    ...images.map(
-      (img, i) =>
-        `![photo_${String(i + 1).padStart(2, '0')}](${img.cloudinaryUrl})\n\n<!-- 사진 ${i + 1} 설명 -->\n`,
-    ),
-    '---',
-    '',
-    '오늘 포스팅은 여기서 마무리!',
-    '더 궁금하신 점은 댓글로 남겨주세요 😊',
-    '그럼 안녕! 👋',
-  ].join('\n');
+  // 카테고리별 본문 구조 적용
+  const templateFn = categoryTemplates[config.category] || defaultTemplate;
+  const body = templateFn(title, images);
 
   return frontmatter + '\n' + body;
 }

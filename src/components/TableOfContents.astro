@@ -1,0 +1,119 @@
+---
+// TOC is generated client-side from post headings
+---
+
+<aside class="toc-sidebar" id="toc-sidebar">
+  <div class="toc-inner">
+    <p class="toc-title">목차</p>
+    <nav id="toc-nav" aria-label="목차"></nav>
+  </div>
+</aside>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const tocNav = document.getElementById('toc-nav');
+    const tocSidebar = document.getElementById('toc-sidebar');
+    if (!tocNav || !tocSidebar) return;
+
+    const headings = document.querySelectorAll('.post-body h2, .post-body h3');
+    if (headings.length < 2) {
+      tocSidebar.style.display = 'none';
+      return;
+    }
+
+    const links: HTMLAnchorElement[] = [];
+    headings.forEach((h, i) => {
+      const id = h.id || `heading-${i}`;
+      h.id = id;
+
+      const a = document.createElement('a');
+      a.href = `#${id}`;
+      a.textContent = h.textContent || '';
+      a.className = `toc-link toc-${h.tagName.toLowerCase()}`;
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      tocNav.appendChild(a);
+      links.push(a);
+    });
+
+    // Highlight active heading on scroll
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            links.forEach((l) => l.classList.remove('active'));
+            const active = links.find((l) => l.getAttribute('href') === `#${entry.target.id}`);
+            active?.classList.add('active');
+          }
+        });
+      },
+      { rootMargin: '-80px 0px -60% 0px', threshold: 0.1 },
+    );
+
+    headings.forEach((h) => observer.observe(h));
+  });
+</script>
+
+<style>
+  .toc-sidebar {
+    display: none;
+  }
+
+  @media (min-width: 1200px) {
+    .toc-sidebar {
+      display: block;
+      position: fixed;
+      top: 100px;
+      right: calc((100vw - 680px) / 2 - 260px);
+      width: 220px;
+      max-height: calc(100vh - 140px);
+      overflow-y: auto;
+    }
+  }
+
+  .toc-inner {
+    padding: 1rem;
+    background: var(--color-bg-card);
+    border-radius: var(--radius);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow);
+  }
+
+  .toc-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+  }
+
+  .toc-sidebar :global(.toc-link) {
+    display: block;
+    padding: 0.3rem 0;
+    font-size: 0.8rem;
+    color: var(--color-text-light);
+    line-height: 1.4;
+    border-left: 2px solid transparent;
+    padding-left: 0.75rem;
+    transition: all 0.15s;
+  }
+
+  .toc-sidebar :global(.toc-link:hover) {
+    color: var(--color-accent);
+    opacity: 1;
+  }
+
+  .toc-sidebar :global(.toc-link.active) {
+    color: var(--color-accent);
+    border-left-color: var(--color-accent);
+    font-weight: 600;
+  }
+
+  .toc-sidebar :global(.toc-h3) {
+    padding-left: 1.5rem;
+    font-size: 0.75rem;
+  }
+</style>

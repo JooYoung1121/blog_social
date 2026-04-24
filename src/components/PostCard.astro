@@ -26,7 +26,7 @@ const formattedDate = date.toLocaleDateString('ko-KR', {
 });
 ---
 
-<a href={`/posts/${slug}`} class="post-card">
+<a href={`/posts/${slug}`} class="post-card" data-category={category}>
   <div class="card-image">
     <img src={thumbnail} alt={title} loading="lazy" />
     {sponsored && <span class="sponsored-tag">협찬</span>}

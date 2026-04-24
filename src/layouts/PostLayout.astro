@@ -1,6 +1,11 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 import SponsorBadge from '../components/SponsorBadge.astro';
+import TableOfContents from '../components/TableOfContents.astro';
+import RelatedPosts from '../components/RelatedPosts.astro';
+import ShareButtons from '../components/ShareButtons.astro';
+import ReadingProgress from '../components/ReadingProgress.astro';
+import Lightbox from '../components/Lightbox.astro';
 
 interface Props {
   title: string;
@@ -43,7 +48,8 @@ const formattedDate = date.toLocaleDateString('ko-KR', {
 });
 ---
 
-<BaseLayout title={title} description={description} ogImage={thumbnail}>
+<BaseLayout title={title} description={description} ogImage={thumbnail} type="article" publishedDate={date} tags={tags}>
+  <ReadingProgress />
   <article class="post">
     {sponsored && sponsorInfo && <SponsorBadge info={sponsorInfo} />}
 
@@ -68,23 +74,30 @@ const formattedDate = date.toLocaleDateString('ko-KR', {
       </div>
     )}
 
+    <TableOfContents />
+
     <div class="post-body content-width">
       <slot />
     </div>
 
     <footer class="post-footer content-width">
-      {productLink && (
-        <a href={productLink} target="_blank" rel="noopener" class="product-link">
-          🛒 제품 보러가기
-        </a>
-      )}
-      {naverPostUrl && (
-        <a href={naverPostUrl} target="_blank" rel="noopener" class="naver-link">
-          📝 네이버 블로그에서 보기
-        </a>
-      )}
+      <div class="footer-actions">
+        {productLink && (
+          <a href={productLink} target="_blank" rel="noopener" class="product-link">
+            🛒 제품 보러가기
+          </a>
+        )}
+        {naverPostUrl && (
+          <a href={naverPostUrl} target="_blank" rel="noopener" class="naver-link">
+            📝 네이버 블로그에서 보기
+          </a>
+        )}
+      </div>
+      <ShareButtons title={title} />
+      <RelatedPosts currentSlug={Astro.params.slug || ''} category={category} tags={tags} />
     </footer>
   </article>
+  <Lightbox />
 </BaseLayout>
 
 <style>
@@ -157,13 +170,16 @@ const formattedDate = date.toLocaleDateString('ko-KR', {
     margin-top: 3rem;
     padding-top: 1.5rem;
     border-top: 1px solid var(--color-border);
+  }
+
+  .footer-actions {
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
   }
 
   .product-link,
-  .naver-link {
+  .post-footer .naver-link {
     display: inline-block;
     padding: 0.6rem 1.2rem;
     background: var(--color-accent-light);

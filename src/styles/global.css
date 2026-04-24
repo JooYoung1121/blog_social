@@ -101,6 +101,27 @@ p {
 .badge--food { background: #fff3e0; color: #e65100; }
 .badge--travel { background: #f3e5f5; color: #7b1fa2; }
 
+/* ===== Dark Mode ===== */
+[data-theme="dark"] {
+  --color-bg: #1a1714;
+  --color-bg-card: #252220;
+  --color-text: #e8e0d6;
+  --color-text-light: #a89b8c;
+  --color-accent: #e8a87c;
+  --color-accent-light: #3d3225;
+  --color-border: #3d3628;
+  --color-sponsor: #1a1714;
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .site-header {
+  background: rgba(26, 23, 20, 0.95);
+}
+
+[data-theme="dark"] img {
+  filter: brightness(0.92);
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
   html { font-size: 15px; }

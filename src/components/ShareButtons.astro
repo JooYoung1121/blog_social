@@ -1,0 +1,130 @@
+---
+interface Props {
+  title: string;
+  url?: string;
+}
+
+const { title } = Astro.props;
+const siteUrl = 'https://blog-social.vercel.app';
+---
+
+<div class="share-buttons">
+  <button class="share-btn share-url" data-url={siteUrl + Astro.url.pathname} data-title={title} aria-label="URL 복사">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+    </svg>
+    <span class="share-label">링크 복사</span>
+  </button>
+  <button class="share-btn share-kakao" data-url={siteUrl + Astro.url.pathname} data-title={title} aria-label="카카오톡 공유">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 3C6.48 3 2 6.58 2 10.9c0 2.78 1.8 5.22 4.52 6.6-.2.75-.73 2.72-.84 3.14-.13.52.19.51.4.37.17-.11 2.65-1.8 3.72-2.53.7.1 1.44.16 2.2.16 5.52 0 10-3.58 10-7.9S17.52 3 12 3z"/>
+    </svg>
+    <span class="share-label">카카오톡</span>
+  </button>
+</div>
+
+<div class="share-toast" id="share-toast">링크가 복사되었어요!</div>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    // URL Copy
+    document.querySelectorAll('.share-url').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const url = (btn as HTMLElement).dataset.url || window.location.href;
+        try {
+          await navigator.clipboard.writeText(url);
+          const toast = document.getElementById('share-toast');
+          if (toast) {
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+          }
+        } catch {
+          // fallback
+          const input = document.createElement('input');
+          input.value = url;
+          document.body.appendChild(input);
+          input.select();
+          document.execCommand('copy');
+          document.body.removeChild(input);
+        }
+      });
+    });
+
+    // Kakao Share
+    document.querySelectorAll('.share-kakao').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const el = btn as HTMLElement;
+        const url = el.dataset.url || window.location.href;
+        const title = el.dataset.title || document.title;
+        // Fallback: open Kakao share link
+        window.open(
+          `https://story.kakao.com/share?url=${encodeURIComponent(url)}`,
+          '_blank',
+          'width=500,height=600',
+        );
+      });
+    });
+  });
+</script>
+
+<style>
+  .share-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .share-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-bg-card);
+    color: var(--color-text-light);
+    font-size: 0.82rem;
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .share-btn:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .share-kakao {
+    color: #3c1e1e;
+    border-color: #fee500;
+    background: #fee500;
+  }
+
+  .share-kakao:hover {
+    background: #f5dc00;
+    border-color: #f5dc00;
+    color: #3c1e1e;
+  }
+
+  .share-toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--color-text);
+    color: #fff;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius);
+    font-size: 0.85rem;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 999;
+    pointer-events: none;
+  }
+
+  .share-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>

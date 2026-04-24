@@ -1,0 +1,51 @@
+---
+// Reading progress bar - client-side only
+---
+
+<div class="reading-progress" id="reading-progress">
+  <div class="reading-progress-bar" id="reading-progress-bar"></div>
+</div>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const bar = document.getElementById('reading-progress-bar');
+    const progress = document.getElementById('reading-progress');
+    if (!bar || !progress) return;
+
+    const article = document.querySelector('.post-body');
+    if (!article) {
+      progress.style.display = 'none';
+      return;
+    }
+
+    function updateProgress() {
+      const rect = (article as Element).getBoundingClientRect();
+      const total = rect.height;
+      const scrolled = Math.max(0, -rect.top);
+      const percent = Math.min(100, (scrolled / (total - window.innerHeight * 0.5)) * 100);
+      bar!.style.width = `${percent}%`;
+    }
+
+    window.addEventListener('scroll', updateProgress, { passive: true });
+    updateProgress();
+  });
+</script>
+
+<style>
+  .reading-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: transparent;
+    z-index: 200;
+  }
+
+  .reading-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--color-accent), #e8a87c);
+    transition: width 0.1s linear;
+  }
+</style>

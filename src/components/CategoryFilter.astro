@@ -1,0 +1,86 @@
+---
+interface Props {
+  currentCategory?: string;
+}
+
+const { currentCategory } = Astro.props;
+
+const categories = [
+  { value: 'all', label: '전체' },
+  { value: 'baby-products', label: '육아용품 리뷰' },
+  { value: 'parenting', label: '육아일기' },
+  { value: 'daily-life', label: '일상' },
+  { value: 'food', label: '맛집/요리' },
+  { value: 'travel', label: '여행/나들이' },
+];
+---
+
+<nav class="category-filter" aria-label="카테고리 필터">
+  {categories.map((cat) => (
+    <button
+      class:list={['filter-btn', { active: currentCategory === cat.value || (!currentCategory && cat.value === 'all') }]}
+      data-category={cat.value}
+    >
+      {cat.label}
+    </button>
+  ))}
+</nav>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const buttons = document.querySelectorAll<HTMLButtonElement>('.filter-btn');
+    const cards = document.querySelectorAll<HTMLElement>('.post-card');
+
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const category = btn.dataset.category;
+
+        buttons.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        cards.forEach((card) => {
+          if (category === 'all') {
+            card.style.display = '';
+          } else {
+            const cardCategory = card.dataset.category;
+            card.style.display = cardCategory === category ? '' : 'none';
+          }
+        });
+      });
+    });
+  });
+</script>
+
+<style>
+  .category-filter {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .filter-btn {
+    padding: 0.45rem 1rem;
+    border: 1.5px solid var(--color-border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--color-text-light);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font-body);
+  }
+
+  .filter-btn:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .filter-btn.active {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: #fff;
+  }
+</style>
