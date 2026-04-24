@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://blog-social.vercel.app/sitemap-index.xml
+Sitemap: https://jinas-holiday.vercel.app/sitemap-index.xml
