@@ -38,7 +38,7 @@ const posts = (await getCollection('posts', ({ data }) => !data.draft))
   .hero {
     text-align: center;
     padding: 3.5rem 0 2.5rem;
-    background: linear-gradient(180deg, var(--color-accent-light) 0%, transparent 100%);
+    background: linear-gradient(180deg, var(--color-accent-light) 0%, var(--color-bg) 100%);
     border-radius: 0 0 2rem 2rem;
     margin-bottom: 1rem;
   }
