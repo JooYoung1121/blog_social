@@ -241,17 +241,45 @@ git add . && git commit -m "feat: 새 글 — 제품명" && git push
 
 ---
 
-## 7. AI 자동 글 생성 (Phase 2 이후)
+## 7. AI 자동 글 생성
 
-`npm run generate-draft -- --input input/2026-04-27-제품명` 한 줄로:
+```bash
+npm run generate-draft -- --input input/2026-04-27-제품명 --category baby-products
+```
 
-1. `topic.txt`, `purchase.txt`, `keywords.txt`, `notes.txt`, (있으면) `client-guide.md` 읽기
-2. `buildSystemPrompt()` 으로 룰 100% 반영된 시스템 프롬프트 생성
-3. Claude API로 초안 생성 (prompt caching으로 비용 절감)
-4. 생성된 마크다운에 자동 lint 통과 검사
-5. 통과하면 `src/content/posts/...` 에 저장
+이 한 줄로:
 
-> 사용자는 **본인 경험 디테일을 notes.txt에 풍부히 적기만 하면** 됩니다. 톤·구조·금지패턴은 자동.
+1. 입력 폴더의 `topic.txt`, `purchase.txt`, `keywords.txt`, `notes.txt`, (있으면) `client-guide.md` 읽기
+2. 사진 Cloudinary 업로드 + 톤 보정
+3. `buildSystemPrompt()` 으로 룰 100% 반영된 시스템 프롬프트 생성 → ephemeral 캐시 (90% 비용 절감)
+4. **Claude Opus 4.7 멀티모달 호출** — 사진을 Claude가 직접 보고 정확한 캡션 작성
+5. 생성된 마크다운에 자동 lint 실행 (룰 위반 검사)
+6. `src/content/posts/YYYY/MM/{slug}.md` 에 저장
+
+### 옵션
+
+```bash
+--intent review       # review (기본) | compare | info | location | diary
+--target search       # search (기본) | homefeed | both
+--model claude-...    # 기본: claude-opus-4-7. 비용 절감 시 claude-sonnet-4-6
+--no-tone             # 사진 톤 보정 끄기
+```
+
+### 필요한 환경변수
+
+`.env` 에 추가:
+```
+ANTHROPIC_API_KEY=sk-ant-...
+```
+키 발급: https://console.anthropic.com/settings/keys
+
+### 비용 가늠
+
+- 시스템 프롬프트(약 4000자) → ephemeral 캐시 → 두 번째 호출부터 90% 할인
+- 사진 10장 + 메모 500자 + 응답 2000자 ≈ Opus 4.7 기준 첫 호출 ~$0.20, 같은 날 재호출 ~$0.05
+- Sonnet 4.6 사용 시 약 1/2 가격
+
+> 사용자는 **`notes.txt`에 본인 경험 디테일을 풍부히 적기만 하면** 됩니다. 톤·구조·금지패턴은 코드(`style-rules.ts`)가 보장.
 
 ---
 

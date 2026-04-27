@@ -12,9 +12,11 @@
     "astro": "astro",
     "new-post": "tsx scripts/new-post.ts",
     "upload-images": "tsx scripts/upload-images.ts",
+    "generate-draft": "tsx scripts/generate-draft.ts",
     "lint:posts": "tsx scripts/lint-posts.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.91.1",
     "@astrojs/rss": "^4.0.18",
     "@astrojs/sitemap": "^3.7.2",
     "@vercel/node": "^5.7.4",
