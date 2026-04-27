@@ -50,38 +50,107 @@ export const TONE_RULES = {
 } as const;
 
 // ──────────────────────────────────────────────
-// 절대 금지 패턴
+// 구매 형태 (협찬 vs 직구매 vs 무상제공 vs 체험단)
 // ──────────────────────────────────────────────
-export const FORBIDDEN_PATTERNS: { pattern: RegExp; reason: string }[] = [
-  // 협찬/스펙 표기 금지 (memory: feedback_no_sponsorship_no_specs.md)
-  { pattern: /협찬\s*받/, reason: '협찬 받았다는 표현 금지' },
-  { pattern: /제공\s*받/, reason: '제공 받았다는 표현 금지' },
-  { pattern: /\d{3,}\s*원/, reason: '가격 정보 표기 금지 (예: 5000원)' },
-  { pattern: /\d+\s*만\s*원/, reason: '가격 정보 표기 금지 (예: 5만원)' },
-  { pattern: /\d+\s*개입/, reason: '수량 표기 금지' },
-  { pattern: /\d+\s*mm/i, reason: '사이즈(mm) 표기 금지' },
+export type PurchaseType =
+  | 'self-purchased' // 직접 구매한 제품/서비스
+  | 'sponsored' // 협찬 (원고료 + 제품, 가이드 있음)
+  | 'gifted' // 무상 제공만 (가이드 없음)
+  | 'service-experience'; // 음식점/시설 등 서비스 체험단
+
+export const PURCHASE_TYPE_META: Record<
+  PurchaseType,
+  {
+    label: string;
+    allowPriceInfo: boolean; // 본문에 가격 표기 허용
+    toneNote: string;
+    guidePriority: boolean; // 체험단 가이드를 최우선 반영
+  }
+> = {
+  'self-purchased': {
+    label: '직접 구매',
+    allowPriceInfo: true, // 직구매는 가격 표기 OK (사용자 결정)
+    toneNote: '솔직 후기, 단점도 가감없이. "당근에서 샀어요", "직접 구매했어요" 등 자연스럽게.',
+    guidePriority: false,
+  },
+  sponsored: {
+    label: '협찬 (원고료 포함)',
+    allowPriceInfo: false,
+    toneNote: '솔직하되 완곡하게. 가이드 키워드 필수. 본문에 협찬 언급 금지.',
+    guidePriority: true,
+  },
+  gifted: {
+    label: '무상 제공',
+    allowPriceInfo: false,
+    toneNote: '솔직 후기. 가이드 없으니 자유롭게 단점도 표현 OK.',
+    guidePriority: false,
+  },
+  'service-experience': {
+    label: '체험단 (서비스/장소)',
+    allowPriceInfo: false,
+    toneNote: '방문 경험 위주. 가이드 키워드 필수.',
+    guidePriority: true,
+  },
+};
+
+// ──────────────────────────────────────────────
+// 절대 금지 패턴 — purchaseType별로 분기
+// ──────────────────────────────────────────────
+export function getForbiddenPatterns(
+  purchaseType: PurchaseType = 'self-purchased',
+): { pattern: RegExp; reason: string }[] {
+  const meta = PURCHASE_TYPE_META[purchaseType];
+  const patterns: { pattern: RegExp; reason: string }[] = [];
+
+  // 협찬/제공 표현은 모든 타입에서 본문 금지 (frontmatter sponsored 필드로만 표시)
+  patterns.push({ pattern: /협찬\s*받/, reason: '협찬 받았다는 표현 금지 (본문)' });
+  patterns.push({ pattern: /제공\s*받/, reason: '제공 받았다는 표현 금지 (본문)' });
+
+  // 가격 정보: self-purchased에서만 허용
+  if (!meta.allowPriceInfo) {
+    patterns.push({
+      pattern: /\d{3,}\s*원/,
+      reason: `가격 정보 표기 금지 (purchaseType: ${purchaseType})`,
+    });
+    patterns.push({
+      pattern: /\d+\s*만\s*원/,
+      reason: `가격 정보 표기 금지 (purchaseType: ${purchaseType})`,
+    });
+  }
+
+  // 수량/사이즈는 모든 타입에서 금지 유지 (사용자 룰)
+  patterns.push({ pattern: /\d+\s*개입/, reason: '수량 표기 금지' });
+  patterns.push({ pattern: /\d+\s*mm/i, reason: '사이즈(mm) 표기 금지' });
 
   // 모유수유 금지 (memory: user_formula_feeding.md)
-  { pattern: /모유\s*수유/, reason: '분유 수유 중 — 모유수유 표현 금지' },
+  patterns.push({
+    pattern: /모유\s*수유/,
+    reason: '분유 수유 중 — 모유수유 표현 금지',
+  });
 
   // AI 티 나는 필러 섹션 (memory: feedback_no_filler_sections.md)
-  { pattern: /감성\s*한?\s*컷/, reason: '감성컷 섹션 금지 (AI 티)' },
-  { pattern: /감성샷/, reason: '감성샷 섹션 금지 (AI 티)' },
+  patterns.push({ pattern: /감성\s*한?\s*컷/, reason: '감성컷 섹션 금지 (AI 티)' });
+  patterns.push({ pattern: /감성샷/, reason: '감성샷 섹션 금지 (AI 티)' });
 
   // AI 패턴 표현 (memory: feedback_writing_tone.md)
-  {
+  patterns.push({
     pattern: /고민되시는\s*분들\s*많으시죠/,
     reason: 'AI식 일반적 도입 — 본인 구체 에피소드로 시작',
-  },
-  {
+  });
+  patterns.push({
     pattern: /도움이\s*됩니다\s*[.。]/,
     reason: 'AI식 설명체 금지 — "~해서 좋더라구요" 같은 구어체로',
-  },
-  {
+  });
+  patterns.push({
     pattern: /다양한\s*감각\s*자극/,
     reason: 'AI식 교과서 표현 — 봄이 반응 묘사로 대체',
-  },
-];
+  });
+
+  return patterns;
+}
+
+/** @deprecated purchaseType 인자 없는 버전 — getForbiddenPatterns(purchaseType) 사용 권장 */
+export const FORBIDDEN_PATTERNS = getForbiddenPatterns();
 
 // ──────────────────────────────────────────────
 // 분량 / 구조 룰 (memory: project_blog_style_guide.md, project_top_blogger_structure.md)
@@ -222,24 +291,31 @@ export const CATEGORY_META: Record<
 // ──────────────────────────────────────────────
 export interface PromptOptions {
   category: string;
-  intent?: 'review' | 'compare' | 'info' | 'location';
-  target?: 'search' | 'homefeed';
+  purchaseType?: PurchaseType;
+  intent?: 'review' | 'compare' | 'info' | 'location' | 'diary';
+  target?: 'search' | 'homefeed' | 'both';
   productName?: string;
   mainKeyword?: string;
+  subKeywords?: string[];
   notes?: string;
-  clientGuide?: string; // 체험단 가이드 (최우선 반영)
+  clientGuide?: string; // 체험단 가이드 (최우선 반영, purchaseType 가이드 있을 때)
 }
 
 export function buildSystemPrompt(opts: PromptOptions): string {
   const {
     category,
+    purchaseType = 'self-purchased',
     intent = 'review',
     target = 'search',
     productName,
     mainKeyword,
+    subKeywords,
     notes,
     clientGuide,
   } = opts;
+
+  const purchaseMeta = PURCHASE_TYPE_META[purchaseType];
+  const forbiddenPatterns = getForbiddenPatterns(purchaseType);
 
   const targetRules =
     target === 'homefeed'
@@ -247,9 +323,7 @@ export function buildSystemPrompt(opts: PromptOptions): string {
       : HOMEFEED_VS_SEARCH.search_optimized;
 
   const structureFlow =
-    intent === 'info'
-      ? STORY_STRUCTURE.info
-      : STORY_STRUCTURE.review;
+    intent === 'info' ? STORY_STRUCTURE.info : STORY_STRUCTURE.review;
 
   const categoryDesc = CATEGORY_META[category]?.description || '';
 
@@ -269,14 +343,22 @@ export function buildSystemPrompt(opts: PromptOptions): string {
     `- 문단 1~${STRUCTURE_RULES.paragraph_max_lines}줄 짧게 끊고 빈 줄 자주`,
     '- AI 티 나는 깔끔한 문장 ❌, 구어체 자연스러움 ✅',
     '',
+    `# 구매 형태: ${purchaseMeta.label} (${purchaseType})`,
+    `- ${purchaseMeta.toneNote}`,
+    purchaseMeta.allowPriceInfo
+      ? '- 가격 표기 OK (직구매니까 솔직하게 적어도 됨)'
+      : '- 가격 표기 금지 (수량/사이즈도 본문에 X)',
+    purchaseMeta.guidePriority
+      ? '- ⚠️ 체험단 가이드가 있으면 위 모든 룰보다 가이드가 최우선'
+      : '',
+    '',
     '# 인사말 / 마무리 (정확히 이 문구 사용)',
     `인사: ${INTRO}`,
     `마무리: ${OUTRO}`,
     '',
     '# 절대 금지',
-    ...FORBIDDEN_PATTERNS.map((p) => `- ${p.reason}`),
+    ...forbiddenPatterns.map((p) => `- ${p.reason}`),
     '- "감성 한 컷", "감성샷" 같은 의미 없는 사진 나열 섹션',
-    '- "~에 도움이 됩니다" 같은 설명체',
     '- 명사형 소제목 ("성분", "디자인", "결론" 등)',
     '',
     '# 사진 배치',
@@ -298,6 +380,9 @@ export function buildSystemPrompt(opts: PromptOptions): string {
     mainKeyword
       ? `- 메인 키워드 "${mainKeyword}" ${STRUCTURE_RULES.main_keyword_count.min}~${STRUCTURE_RULES.main_keyword_count.max}회 자연 반복`
       : `- 메인 키워드 ${STRUCTURE_RULES.main_keyword_count.min}~${STRUCTURE_RULES.main_keyword_count.max}회 자연 반복`,
+    subKeywords && subKeywords.length > 0
+      ? `- 서브 키워드 (자연스럽게 1~2회씩): ${subKeywords.join(', ')}`
+      : '',
     `- 내부 링크 ${STRUCTURE_RULES.internal_links.min}~${STRUCTURE_RULES.internal_links.max}개`,
     '',
     `# 타겟: ${target}`,
@@ -308,10 +393,10 @@ export function buildSystemPrompt(opts: PromptOptions): string {
       : '',
     '',
     `# 카테고리: ${category} (${categoryDesc})`,
-    productName ? `# 제품명: ${productName}` : '',
-    notes ? `# 추가 메모\n${notes}` : '',
-    clientGuide
-      ? `# 체험단 가이드 (최우선 반영, 위 룰과 충돌 시 가이드 우선)\n${clientGuide}`
+    productName ? `# 제품/장소: ${productName}` : '',
+    notes ? `# 추가 메모 (사용자가 적어준 핵심 포인트)\n${notes}` : '',
+    clientGuide && purchaseMeta.guidePriority
+      ? `# 체험단 가이드 (최우선 반영 — 위 룰과 충돌 시 가이드 우선)\n${clientGuide}`
       : '',
   ]
     .filter(Boolean)
@@ -327,14 +412,31 @@ export interface LintIssue {
   message: string;
 }
 
-export function lintPostBody(body: string, mainKeyword?: string): LintIssue[] {
+export interface LintOptions {
+  mainKeyword?: string;
+  purchaseType?: PurchaseType;
+}
+
+export function lintPostBody(
+  body: string,
+  optsOrKeyword?: LintOptions | string,
+): LintIssue[] {
+  // 호환성: 이전 시그니처 lintPostBody(body, mainKeyword) 도 지원
+  const opts: LintOptions =
+    typeof optsOrKeyword === 'string'
+      ? { mainKeyword: optsOrKeyword }
+      : optsOrKeyword || {};
+
+  const { mainKeyword, purchaseType = 'self-purchased' } = opts;
+
   const issues: LintIssue[] = [];
+  const forbiddenPatterns = getForbiddenPatterns(purchaseType);
 
   // frontmatter 분리
   const bodyOnly = body.replace(/^---[\s\S]*?---\s*/m, '').trim();
 
-  // 1. 금지 패턴
-  for (const { pattern, reason } of FORBIDDEN_PATTERNS) {
+  // 1. 금지 패턴 (purchaseType별 분기)
+  for (const { pattern, reason } of forbiddenPatterns) {
     if (pattern.test(bodyOnly)) {
       issues.push({
         level: 'error',

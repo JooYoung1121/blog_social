@@ -12,11 +12,16 @@ import 'dotenv/config';
 import fs from 'fs/promises';
 import path from 'path';
 import { glob } from 'glob';
-import { lintPostBody, type LintIssue } from './lib/style-rules.js';
+import {
+  lintPostBody,
+  type LintIssue,
+  type PurchaseType,
+} from './lib/style-rules.js';
 
 interface PostReport {
   file: string;
   mainKeyword?: string;
+  purchaseType?: PurchaseType;
   errors: LintIssue[];
   warnings: LintIssue[];
 }
@@ -32,14 +37,29 @@ function parseFrontmatter(text: string): Record<string, string> {
   return result;
 }
 
+function inferPurchaseType(
+  fm: Record<string, string>,
+): PurchaseType | undefined {
+  if (fm.purchaseType) return fm.purchaseType as PurchaseType;
+  // legacy sponsored 필드로 추정 (true면 sponsored, false면 self-purchased)
+  if (fm.sponsored === 'true') return 'sponsored';
+  if (fm.sponsored === 'false') return 'self-purchased';
+  return undefined;
+}
+
 async function lintFile(filePath: string): Promise<PostReport> {
   const content = await fs.readFile(filePath, 'utf-8');
   const fm = parseFrontmatter(content);
-  const issues = lintPostBody(content, fm.mainKeyword);
+  const purchaseType = inferPurchaseType(fm);
+  const issues = lintPostBody(content, {
+    mainKeyword: fm.mainKeyword,
+    purchaseType,
+  });
 
   return {
     file: filePath,
     mainKeyword: fm.mainKeyword,
+    purchaseType,
     errors: issues.filter((i) => i.level === 'error'),
     warnings: issues.filter((i) => i.level === 'warning'),
   };
@@ -75,6 +95,7 @@ async function main() {
 
     const rel = path.relative(process.cwd(), r.file);
     console.log(`\n${r.errors.length > 0 ? '❌' : '⚠️ '} ${rel}`);
+    if (r.purchaseType) console.log(`   구매 형태: ${r.purchaseType}`);
     if (r.mainKeyword) console.log(`   메인 키워드: ${r.mainKeyword}`);
 
     for (const e of r.errors) {

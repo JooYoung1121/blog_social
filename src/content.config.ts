@@ -23,7 +23,15 @@ const posts = defineCollection({
     target: z.enum(['search', 'homefeed', 'both']).default('search'), // 노출 채널
     thumbnail: z.string(),
     images: z.array(z.string()).default([]),
-    sponsored: z.boolean().default(false),
+    // 구매 형태 (lint 룰과 톤이 분기됨)
+    // - self-purchased: 직접 구매 (가격 표기 OK)
+    // - sponsored: 협찬 (원고료+제품, 가이드 있음, 가격 표기 X)
+    // - gifted: 무상 제공만 (가이드 없음, 가격 표기 X)
+    // - service-experience: 음식점/시설 체험단
+    purchaseType: z
+      .enum(['self-purchased', 'sponsored', 'gifted', 'service-experience'])
+      .optional(),
+    sponsored: z.boolean().default(false), // legacy — purchaseType으로 대체 중
     sponsorInfo: z.string().optional(),
     productLink: z.string().url().optional(),
     naverPostUrl: z.string().url().optional(),
