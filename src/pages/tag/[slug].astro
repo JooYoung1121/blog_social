@@ -1,0 +1,98 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts', ({ data }) => !data.draft);
+  const tagMap = new Map<string, typeof posts>();
+
+  for (const post of posts) {
+    for (const tag of post.data.tags) {
+      if (!tagMap.has(tag)) tagMap.set(tag, []);
+      tagMap.get(tag)!.push(post);
+    }
+  }
+
+  return [...tagMap.entries()].map(([tag, tagPosts]) => ({
+    params: { slug: tag },
+    props: {
+      tag,
+      posts: tagPosts.sort(
+        (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+      ),
+    },
+  }));
+}
+
+const { tag, posts } = Astro.props;
+---
+
+<BaseLayout title={`#${tag}`} description={`${tag} 태그가 달린 글 모음`}>
+  <section class="tag-header container">
+    <p class="eyebrow">태그</p>
+    <h1>#{tag}</h1>
+    <p class="count">총 {posts.length}개의 글</p>
+  </section>
+
+  <section class="posts-grid container">
+    <div class="grid">
+      {posts.map((post) => (
+        <PostCard
+          title={post.data.title}
+          description={post.data.description}
+          date={post.data.date}
+          category={post.data.category}
+          thumbnail={post.data.thumbnail}
+          slug={post.id}
+          sponsored={post.data.sponsored}
+        />
+      ))}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .tag-header {
+    text-align: center;
+    padding: 2.5rem 0 1.5rem;
+  }
+
+  .eyebrow {
+    font-size: 0.85rem;
+    color: var(--color-accent);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  .tag-header h1 {
+    margin-top: 0.5rem;
+    font-size: 2rem;
+    font-family: var(--font-serif);
+    color: var(--color-accent);
+  }
+
+  .count {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--color-text-light);
+  }
+
+  .posts-grid {
+    padding-bottom: 3rem;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 600px) {
+    .grid { grid-template-columns: 1fr; }
+    .tag-header h1 { font-size: 1.6rem; }
+  }
+</style>

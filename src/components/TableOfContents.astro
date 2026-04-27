@@ -1,58 +1,128 @@
 ---
-// TOC is generated client-side from post headings
+// TOC: 데스크톱은 우측 사이드바, 모바일은 우측 하단 FAB → 바텀시트
 ---
 
-<aside class="toc-sidebar" id="toc-sidebar">
+<aside class="toc-sidebar" id="toc-sidebar" aria-label="목차">
   <div class="toc-inner">
     <p class="toc-title">목차</p>
-    <nav id="toc-nav" aria-label="목차"></nav>
+    <nav id="toc-nav-desktop"></nav>
   </div>
 </aside>
 
+<button class="toc-fab" id="toc-fab" type="button" aria-label="목차 열기" aria-expanded="false" aria-controls="toc-sheet">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <line x1="8" y1="6" x2="21" y2="6"/>
+    <line x1="8" y1="12" x2="21" y2="12"/>
+    <line x1="8" y1="18" x2="21" y2="18"/>
+    <line x1="3" y1="6" x2="3.01" y2="6"/>
+    <line x1="3" y1="12" x2="3.01" y2="12"/>
+    <line x1="3" y1="18" x2="3.01" y2="18"/>
+  </svg>
+</button>
+
+<div class="toc-backdrop" id="toc-backdrop" hidden></div>
+
+<div class="toc-sheet" id="toc-sheet" hidden role="dialog" aria-label="목차" aria-modal="true">
+  <div class="toc-sheet-header">
+    <p class="toc-title">목차</p>
+    <button class="toc-close" id="toc-close" type="button" aria-label="목차 닫기">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <nav id="toc-nav-mobile"></nav>
+</div>
+
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    const tocNav = document.getElementById('toc-nav');
-    const tocSidebar = document.getElementById('toc-sidebar');
-    if (!tocNav || !tocSidebar) return;
+    const desktopNav = document.getElementById('toc-nav-desktop');
+    const mobileNav = document.getElementById('toc-nav-mobile');
+    const sidebar = document.getElementById('toc-sidebar');
+    const fab = document.getElementById('toc-fab');
+    const sheet = document.getElementById('toc-sheet');
+    const backdrop = document.getElementById('toc-backdrop');
+    const closeBtn = document.getElementById('toc-close');
+
+    if (!desktopNav || !mobileNav || !sidebar || !fab || !sheet || !backdrop || !closeBtn) return;
 
     const headings = document.querySelectorAll('.post-body h2, .post-body h3');
+
     if (headings.length < 2) {
-      tocSidebar.style.display = 'none';
+      sidebar.style.display = 'none';
+      fab.style.display = 'none';
       return;
     }
 
-    const links: HTMLAnchorElement[] = [];
+    const desktopLinks: HTMLAnchorElement[] = [];
+    const mobileLinks: HTMLAnchorElement[] = [];
+
     headings.forEach((h, i) => {
       const id = h.id || `heading-${i}`;
       h.id = id;
+      const tagClass = `toc-${h.tagName.toLowerCase()}`;
+      const text = h.textContent || '';
 
-      const a = document.createElement('a');
-      a.href = `#${id}`;
-      a.textContent = h.textContent || '';
-      a.className = `toc-link toc-${h.tagName.toLowerCase()}`;
-      a.addEventListener('click', (e) => {
-        e.preventDefault();
-        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      [desktopNav, mobileNav].forEach((container, idx) => {
+        const a = document.createElement('a');
+        a.href = `#${id}`;
+        a.textContent = text;
+        a.className = `toc-link ${tagClass}`;
+        a.addEventListener('click', (e) => {
+          e.preventDefault();
+          document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          if (idx === 1) closeSheet();
+        });
+        container.appendChild(a);
+        (idx === 0 ? desktopLinks : mobileLinks).push(a);
       });
-      tocNav.appendChild(a);
-      links.push(a);
     });
 
-    // Highlight active heading on scroll
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            links.forEach((l) => l.classList.remove('active'));
-            const active = links.find((l) => l.getAttribute('href') === `#${entry.target.id}`);
-            active?.classList.add('active');
+            const id = entry.target.id;
+            [desktopLinks, mobileLinks].forEach((links) => {
+              links.forEach((l) => l.classList.remove('active'));
+              links.find((l) => l.getAttribute('href') === `#${id}`)?.classList.add('active');
+            });
           }
         });
       },
       { rootMargin: '-80px 0px -60% 0px', threshold: 0.1 },
     );
-
     headings.forEach((h) => observer.observe(h));
+
+    function openSheet() {
+      sheet!.hidden = false;
+      backdrop!.hidden = false;
+      fab!.setAttribute('aria-expanded', 'true');
+      requestAnimationFrame(() => {
+        sheet!.classList.add('open');
+        backdrop!.classList.add('open');
+      });
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSheet() {
+      sheet!.classList.remove('open');
+      backdrop!.classList.remove('open');
+      fab!.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+      setTimeout(() => {
+        sheet!.hidden = true;
+        backdrop!.hidden = true;
+      }, 200);
+    }
+
+    fab.addEventListener('click', openSheet);
+    closeBtn.addEventListener('click', closeSheet);
+    backdrop.addEventListener('click', closeSheet);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !sheet!.hidden) closeSheet();
+    });
   });
 </script>
 
@@ -70,6 +140,9 @@
       width: 220px;
       max-height: calc(100vh - 140px);
       overflow-y: auto;
+    }
+    .toc-fab {
+      display: none;
     }
   }
 
@@ -90,30 +163,128 @@
     margin-bottom: 0.75rem;
   }
 
-  .toc-sidebar :global(.toc-link) {
+  /* TOC links (공통) */
+  :global(.toc-link) {
     display: block;
-    padding: 0.3rem 0;
-    font-size: 0.8rem;
+    padding: 0.4rem 0;
+    font-size: 0.85rem;
     color: var(--color-text-light);
     line-height: 1.4;
     border-left: 2px solid transparent;
     padding-left: 0.75rem;
     transition: all 0.15s;
+    text-decoration: none;
   }
 
-  .toc-sidebar :global(.toc-link:hover) {
+  :global(.toc-link:hover) {
     color: var(--color-accent);
     opacity: 1;
   }
 
-  .toc-sidebar :global(.toc-link.active) {
+  :global(.toc-link.active) {
     color: var(--color-accent);
     border-left-color: var(--color-accent);
     font-weight: 600;
   }
 
-  .toc-sidebar :global(.toc-h3) {
+  :global(.toc-h3) {
     padding-left: 1.5rem;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  /* 모바일 FAB */
+  .toc-fab {
+    position: fixed;
+    right: 1.2rem;
+    bottom: 1.2rem;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    transition: transform 0.15s;
+  }
+
+  .toc-fab:hover {
+    transform: translateY(-2px);
+  }
+
+  .toc-fab:focus-visible {
+    outline: 2px solid var(--color-text);
+    outline-offset: 2px;
+  }
+
+  /* 백드롭 + 시트 */
+  .toc-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 60;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .toc-backdrop.open {
+    opacity: 1;
+  }
+
+  .toc-sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 70;
+    background: var(--color-bg-card);
+    border-radius: 16px 16px 0 0;
+    max-height: 70vh;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.2s ease-out;
+    padding: 1rem 1.25rem 1.5rem;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.15);
+  }
+
+  .toc-sheet.open {
+    transform: translateY(0);
+  }
+
+  .toc-sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .toc-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-light);
+    padding: 0.4rem;
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+  }
+
+  .toc-close:hover {
+    background: var(--color-accent-light);
+    color: var(--color-text);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .toc-sheet,
+    .toc-backdrop,
+    .toc-fab {
+      transition: none;
+    }
   }
 </style>

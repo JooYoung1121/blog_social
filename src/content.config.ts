@@ -7,6 +7,7 @@ const posts = defineCollection({
     title: z.string(),
     description: z.string(),
     date: z.coerce.date(),
+    updated: z.coerce.date().optional(), // 글 수정 시 신선도 신호 (JSON-LD dateModified)
     category: z.enum([
       'baby-products',
       'parenting',
@@ -15,6 +16,11 @@ const posts = defineCollection({
       'travel',
     ]),
     tags: z.array(z.string()).default([]),
+    mainKeyword: z.string().optional(), // SEO 메인 키워드 (lint 시 빈도 검사 기준)
+    intent: z
+      .enum(['review', 'compare', 'info', 'location', 'diary'])
+      .default('review'), // AiRSearch 검색 의도 분기
+    target: z.enum(['search', 'homefeed', 'both']).default('search'), // 노출 채널
     thumbnail: z.string(),
     images: z.array(z.string()).default([]),
     sponsored: z.boolean().default(false),

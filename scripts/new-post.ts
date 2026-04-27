@@ -2,7 +2,8 @@ import 'dotenv/config';
 import fs from 'fs/promises';
 import path from 'path';
 import { processAndUpload, type UploadResult } from './upload-images.js';
-import { generateNaverGuide } from './generate-naver.js';
+import { PUBLISHING_RULES } from './lib/style-rules.js';
+// generateNaverGuide는 PUBLISHING_RULES.generate_naver_guide 가 true일 때만 동적 import
 
 interface PostConfig {
   inputDir: string;
@@ -338,23 +339,26 @@ async function main() {
   await fs.writeFile(postPath, markdown, 'utf-8');
   console.log(`\n✅ 포스트 생성: ${postPath}`);
 
-  // Generate Naver guide
-  const naverPath = await generateNaverGuide({
-    title: config.title || 'TODO: 제목',
-    category: config.category,
-    sponsored: config.sponsored || false,
-    sponsorInfo: config.sponsorInfo,
-    productLink: config.productLink,
-    images,
-    slug,
-    notes: notesFromFile,
-  });
-  console.log(`✅ 네이버 가이드: ${naverPath}`);
+  // Naver guide 생성은 룰에 따라 분기 (memory: feedback_no_naver_export.md)
+  if (PUBLISHING_RULES.generate_naver_guide) {
+    const { generateNaverGuide } = await import('./generate-naver.js');
+    const naverPath = await generateNaverGuide({
+      title: config.title || 'TODO: 제목',
+      category: config.category,
+      sponsored: config.sponsored || false,
+      sponsorInfo: config.sponsorInfo,
+      productLink: config.productLink,
+      images,
+      slug,
+      notes: notesFromFile,
+    });
+    console.log(`✅ 네이버 가이드: ${naverPath}`);
+  }
 
   console.log(`
 📌 다음 단계:
-1. ${postPath} 파일을 열어서 본문을 작성하세요
-2. frontmatter의 draft: true → false 로 변경
+1. ${postPath} 파일을 열어서 본문을 작성하세요 (draft: false 로 이미 발행 상태)
+2. npm run lint:posts ${postPath} 로 룰 위반 검사
 3. git add . && git commit && git push 로 발행!
 `);
 }

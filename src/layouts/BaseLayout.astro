@@ -8,6 +8,7 @@ interface Props {
   ogImage?: string;
   type?: 'website' | 'article';
   publishedDate?: Date;
+  updatedDate?: Date;
   tags?: string[];
 }
 
@@ -17,6 +18,7 @@ const {
   ogImage,
   type = 'website',
   publishedDate,
+  updatedDate,
   tags = [],
 } = Astro.props;
 ---
@@ -30,6 +32,7 @@ const {
       ogImage={ogImage}
       type={type}
       publishedDate={publishedDate}
+      updatedDate={updatedDate}
       tags={tags}
     />
   </head>

@@ -11,9 +11,11 @@
     "preview": "astro preview",
     "astro": "astro",
     "new-post": "tsx scripts/new-post.ts",
-    "upload-images": "tsx scripts/upload-images.ts"
+    "upload-images": "tsx scripts/upload-images.ts",
+    "lint:posts": "tsx scripts/lint-posts.ts"
   },
   "dependencies": {
+    "@astrojs/rss": "^4.0.18",
     "@astrojs/sitemap": "^3.7.2",
     "@vercel/node": "^5.7.4",
     "astro": "^6.1.5",

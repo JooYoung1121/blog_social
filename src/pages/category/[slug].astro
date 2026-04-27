@@ -1,0 +1,101 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import { CATEGORY_META } from '../../../scripts/lib/style-rules';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts', ({ data }) => !data.draft);
+  const categories = [...new Set(posts.map((p) => p.data.category))];
+
+  return categories.map((category) => ({
+    params: { slug: category },
+    props: {
+      category,
+      posts: posts
+        .filter((p) => p.data.category === category)
+        .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf()),
+    },
+  }));
+}
+
+const { category, posts } = Astro.props;
+const meta = CATEGORY_META[category] || { label: category, description: '' };
+---
+
+<BaseLayout
+  title={meta.label}
+  description={`${meta.label} — ${meta.description}`}
+>
+  <section class="category-header container">
+    <p class="eyebrow">카테고리</p>
+    <h1>{meta.label}</h1>
+    {meta.description && <p class="desc">{meta.description}</p>}
+    <p class="count">총 {posts.length}개의 글</p>
+  </section>
+
+  <section class="posts-grid container">
+    <div class="grid">
+      {posts.map((post) => (
+        <PostCard
+          title={post.data.title}
+          description={post.data.description}
+          date={post.data.date}
+          category={post.data.category}
+          thumbnail={post.data.thumbnail}
+          slug={post.id}
+          sponsored={post.data.sponsored}
+        />
+      ))}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .category-header {
+    text-align: center;
+    padding: 2.5rem 0 1.5rem;
+  }
+
+  .eyebrow {
+    font-size: 0.85rem;
+    color: var(--color-accent);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  .category-header h1 {
+    margin-top: 0.5rem;
+    font-size: 2.2rem;
+    font-family: var(--font-serif);
+  }
+
+  .desc {
+    margin-top: 0.6rem;
+    color: var(--color-text-light);
+  }
+
+  .count {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--color-text-light);
+  }
+
+  .posts-grid {
+    padding-bottom: 3rem;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 600px) {
+    .grid { grid-template-columns: 1fr; }
+    .category-header h1 { font-size: 1.7rem; }
+  }
+</style>
