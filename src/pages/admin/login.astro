@@ -39,7 +39,7 @@ export const prerender = false;
         e.preventDefault();
         errorEl.hidden = true;
         const password = (document.getElementById('password') as HTMLInputElement).value;
-        const res = await fetch('/api/admin/login', {
+        const res = await fetch('/srv/admin/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ password }),

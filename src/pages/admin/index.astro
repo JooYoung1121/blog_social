@@ -195,7 +195,7 @@ export const prerender = false;
           fd.append('noTone', String(noToneCb.checked));
 
           try {
-            const res = await fetch('/api/admin/upload-image', { method: 'POST', body: fd });
+            const res = await fetch('/srv/admin/upload-image', { method: 'POST', body: fd });
             const json = await res.json();
             if (!res.ok) throw new Error(json.error || 'upload failed');
             state.photos.push({ url: json.url, index: idx });
@@ -246,7 +246,7 @@ export const prerender = false;
           .split('\n').map((s) => s.trim()).filter(Boolean);
 
         try {
-          const res = await fetch('/api/admin/generate', {
+          const res = await fetch('/srv/admin/generate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -298,7 +298,7 @@ export const prerender = false;
         publishStatus.textContent = '📤 GitHub에 커밋 중...';
 
         try {
-          const res = await fetch('/api/admin/publish', {
+          const res = await fetch('/srv/admin/publish', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ slug, markdown: state.markdown }),
@@ -316,7 +316,7 @@ export const prerender = false;
 
       // ─── Logout ─────────────────────────────
       logoutBtn.addEventListener('click', async () => {
-        await fetch('/api/admin/logout', { method: 'POST' });
+        await fetch('/srv/admin/logout', { method: 'POST' });
         location.href = '/admin/login';
       });
     </script>

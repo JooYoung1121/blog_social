@@ -3,7 +3,7 @@ import { SESSION_COOKIE, verifySession } from './lib/admin-auth';
 
 const PUBLIC_ADMIN_PATHS = new Set([
   '/admin/login',
-  '/api/admin/login',
+  '/srv/admin/login',
 ]);
 
 export const onRequest = defineMiddleware(async (context, next) => {
@@ -11,7 +11,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const pathname = url.pathname;
 
   const isAdminPage = pathname.startsWith('/admin');
-  const isAdminApi = pathname.startsWith('/api/admin');
+  const isAdminApi = pathname.startsWith('/srv/admin');
 
   if (!isAdminPage && !isAdminApi) return next();
   if (PUBLIC_ADMIN_PATHS.has(pathname)) return next();
