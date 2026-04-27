@@ -44,10 +44,16 @@ export const prerender = false;
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ password }),
         });
+        const data = await res.json().catch(() => ({}));
+        console.log('[login response]', res.status, data);
         if (res.ok) {
           location.href = '/admin';
         } else {
-          errorEl.textContent = '비밀번호가 올바르지 않습니다.';
+          // TEMP DEBUG: 디버그 정보 화면에 노출 (진단 후 제거)
+          const dbg = (data as any)._debug
+            ? ` (env=${(data as any)._debug.envSet}/${(data as any)._debug.envLen}, secret=${(data as any)._debug.sessionSecretSet}/${(data as any)._debug.sessionSecretLen}, input=${(data as any)._debug.inputType}/${(data as any)._debug.inputLen})`
+            : '';
+          errorEl.textContent = `비밀번호가 올바르지 않습니다.${dbg}`;
           errorEl.hidden = false;
         }
       });
