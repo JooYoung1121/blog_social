@@ -29,3 +29,4 @@ scripts/output/
 
 # temp/input files
 input/
+.vercel/

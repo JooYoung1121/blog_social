@@ -19,6 +19,7 @@
     "@anthropic-ai/sdk": "^0.91.1",
     "@astrojs/rss": "^4.0.18",
     "@astrojs/sitemap": "^3.7.2",
+    "@astrojs/vercel": "^10.0.5",
     "@vercel/node": "^5.7.4",
     "astro": "^6.1.5",
     "cloudinary": "^2.9.0",
