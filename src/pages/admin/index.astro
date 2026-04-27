@@ -17,7 +17,10 @@ export const prerender = false;
   <body>
     <header>
       <h1>새 글 작성</h1>
-      <button id="logout" class="btn-ghost">로그아웃</button>
+      <div class="header-actions">
+        <button id="btn-test-fill" class="btn-ghost" type="button" title="하베브릭스 글 데이터로 폼 자동 입력 (사진 업로드 스킵)">🧪 테스트 데이터</button>
+        <button id="logout" class="btn-ghost">로그아웃</button>
+      </div>
     </header>
 
     <main>
@@ -319,6 +322,47 @@ export const prerender = false;
         await fetch('/srv/admin/logout', { method: 'POST' });
         location.href = '/admin/login';
       });
+
+      // ─── 🧪 테스트 데이터 자동 입력 (임시) ───
+      const btnTestFill = $<HTMLButtonElement>('btn-test-fill');
+      btnTestFill.addEventListener('click', () => {
+        const base = 'https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776998';
+        const dir = '/blog/2026/04/2026-04-24-%ED%95%98%EB%B2%A0%EB%B8%8C%EB%A6%AD%EC%8A%A4-%EC%95%84%EA%B8%B0%EC%B2%B4%EC%9C%A1%EA%B4%80-%EB%B0%94%EB%9E%8C%EA%B0%9C%EB%B9%84-%EC%A7%81%EC%A0%91%EA%B5%AC%EB%A7%A4-%EB%A6%AC%EB%B7%B0';
+        // 토큰 절약 위해 5장만 사용 (전체는 21장)
+        const photos = [
+          `${base}458${dir}/photo_01.jpg`,
+          `${base}459${dir}/photo_02.jpg`,
+          `${base}460${dir}/photo_04.jpg`,
+          `${base}464${dir}/photo_09.jpg`,
+          `${base}471${dir}/photo_19.jpg`,
+        ];
+        state.photos = photos.map((url, i) => ({ url, index: i + 1 }));
+        renderPhotos();
+
+        topicInput.value = '테스트: 하베브릭스 아기체육관 자동 생성';
+        slugInput.value = `test-${new Date().toISOString().slice(0, 10)}-harbebricks-auto`;
+        ($('category') as HTMLSelectElement).value = 'baby-products';
+        ($('purchase-type') as HTMLSelectElement).value = 'self-purchased';
+        ($('intent') as HTMLSelectElement).value = 'review';
+        ($('target') as HTMLSelectElement).value = 'search';
+        ($('main-keyword') as HTMLInputElement).value = '하베브릭스 아기체육관';
+        ($('sub-keywords') as HTMLTextAreaElement).value = '바람개비아기체육관\n신생아장난감\n감각발달';
+        ($('notes') as HTMLTextAreaElement).value = [
+          '- 봄이가 2개월 됐을 때 하루 종일 안고 있어야 했음',
+          '- 산후도우미 이모님 추천으로 알게 됨',
+          '- 처음엔 누워서 발로 차다가 점점 손으로 잡고 놀기 시작',
+          '- 모빌이 바람개비 모양이라 봄이가 신기해함',
+          '- 매트는 살짝 미끄러워서 러그 위에 깔아서 사용',
+          '- 한 달 정도 사용했는데 만족도 매우 높음',
+          '- 단점: 부피가 커서 보관이 살짝 불편',
+        ].join('\n');
+        ($('product-url') as HTMLInputElement).value = '';
+        ($('sponsor') as HTMLInputElement).value = '';
+        ($('client-guide') as HTMLTextAreaElement).value = '';
+
+        btnGenerate.disabled = false;
+        alert('테스트 데이터 입력 완료!\n사진 5장(Cloudinary 재활용) + 메타 정보가 채워졌습니다.\n\n"🤖 AI로 초안 생성" 버튼을 눌러 ANTHROPIC_API_KEY 동작을 확인하세요.\n\n⚠️ 발행 단계는 GITHUB_REPO_TOKEN 필요. 발행 안 하시려면 4단계에서 멈추세요.');
+      });
     </script>
 
     <style>
@@ -353,6 +397,7 @@ export const prerender = false;
         z-index: 10;
       }
       header h1 { margin: 0; font-size: 1.2rem; font-weight: 700; }
+      .header-actions { display: flex; gap: 0.5rem; }
       main {
         max-width: 880px;
         margin: 0 auto;
