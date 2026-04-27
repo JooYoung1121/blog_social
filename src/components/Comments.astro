@@ -1,0 +1,73 @@
+---
+/**
+ * Giscus 댓글 시스템 (GitHub Discussions 기반)
+ *
+ * 활성화 절차:
+ * 1. https://github.com/JooYoung1121/blog_social/settings 에서 "Discussions" 활성화
+ * 2. https://giscus.app 접속해서 다음 입력:
+ *    - Repository: JooYoung1121/blog_social
+ *    - Discussion category: General (또는 Announcement) 만들고 선택
+ *    - Page mapping: pathname
+ *    - Theme: preferred_color_scheme (다크모드 자동 동기화)
+ * 3. giscus.app가 발급해주는 data-repo-id, data-category-id 값을 아래 환경변수에 입력
+ *    - PUBLIC_GISCUS_REPO_ID
+ *    - PUBLIC_GISCUS_CATEGORY_ID
+ * 4. .env에 추가하고 Vercel 환경변수에도 동일 값 등록
+ *
+ * 환경변수가 없으면 안내 박스 표시 (404 안 뜸).
+ */
+
+const repoId = import.meta.env.PUBLIC_GISCUS_REPO_ID;
+const categoryId = import.meta.env.PUBLIC_GISCUS_CATEGORY_ID;
+const enabled = !!(repoId && categoryId);
+---
+
+{enabled ? (
+  <section class="comments content-width">
+    <h2>댓글</h2>
+    <script
+      src="https://giscus.app/client.js"
+      data-repo="JooYoung1121/blog_social"
+      data-repo-id={repoId}
+      data-category="General"
+      data-category-id={categoryId}
+      data-mapping="pathname"
+      data-strict="0"
+      data-reactions-enabled="1"
+      data-emit-metadata="0"
+      data-input-position="top"
+      data-theme="preferred_color_scheme"
+      data-lang="ko"
+      data-loading="lazy"
+      crossorigin="anonymous"
+      async
+    />
+  </section>
+) : (
+  <section class="comments-disabled content-width">
+    <p>💬 댓글 시스템 준비 중 — 곧 열려요!</p>
+  </section>
+)}
+
+<style>
+  .comments {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .comments h2 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
+
+  .comments-disabled {
+    margin-top: 3rem;
+    padding: 1.5rem;
+    text-align: center;
+    background: var(--color-bg-card);
+    border-radius: var(--radius);
+    color: var(--color-text-light);
+    font-size: 0.9rem;
+  }
+</style>

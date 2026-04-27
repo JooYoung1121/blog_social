@@ -3,25 +3,106 @@ export const prerender = true;
 
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PostCard from '../components/PostCard.astro';
-import CategoryFilter from '../components/CategoryFilter.astro';
 import { getCollection } from 'astro:content';
 
 const posts = (await getCollection('posts', ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
+const featured = posts[0];
+const rest = posts.slice(1);
+
+const categoryLabels: Record<string, string> = {
+  'baby-products': '육아용품 리뷰',
+  parenting: '육아일기',
+  'daily-life': '일상',
+  food: '맛집/요리',
+  travel: '여행/나들이',
+};
+
+const categoryCounts = posts.reduce<Record<string, number>>((acc, p) => {
+  acc[p.data.category] = (acc[p.data.category] || 0) + 1;
+  return acc;
+}, {});
+
+const formattedFeaturedDate = featured?.data.date.toLocaleDateString('ko-KR', {
+  year: 'numeric', month: 'short', day: 'numeric',
+});
 ---
 
 <BaseLayout title="홈">
-  <section class="hero container">
-    <p class="hero-eyebrow">육아 · 일상 · 솔직 리뷰</p>
-    <h1>지나의 휴일</h1>
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <p class="hero-eyebrow">육아 · 일상 · 솔직 리뷰</p>
+      <h1>지나의 휴일</h1>
+      <p class="hero-tagline">봄이와 함께하는 매일,<br />그리고 직접 써본 솔직한 리뷰</p>
+
+      <div class="quick-cats">
+        <a href="/category/baby-products" class="quick-cat">
+          <span class="emoji">🍼</span>
+          <span class="label">육아용품</span>
+          <span class="count">{categoryCounts['baby-products'] ?? 0}편</span>
+        </a>
+        <a href="/category/parenting" class="quick-cat">
+          <span class="emoji">👶</span>
+          <span class="label">육아일기</span>
+          <span class="count">{categoryCounts['parenting'] ?? 0}편</span>
+        </a>
+        <a href="/category/daily-life" class="quick-cat">
+          <span class="emoji">☕</span>
+          <span class="label">일상</span>
+          <span class="count">{categoryCounts['daily-life'] ?? 0}편</span>
+        </a>
+        <a href="/archive" class="quick-cat">
+          <span class="emoji">📚</span>
+          <span class="label">전체보기</span>
+          <span class="count">{posts.length}편</span>
+        </a>
+      </div>
+    </div>
   </section>
 
+  <!-- Featured (가장 최근 글) -->
+  {featured && (
+    <section class="featured container">
+      <div class="section-header">
+        <h2>📌 최신 글</h2>
+        <span class="section-sub">방금 올라온 따끈따끈한 글</span>
+      </div>
+      <a href={`/posts/${featured.id}`} class="featured-card" data-category={featured.data.category}>
+        <div class="featured-image">
+          <img src={featured.data.thumbnail} alt={featured.data.title} loading="eager" />
+          {featured.data.sponsored && <span class="sponsored-tag">협찬</span>}
+        </div>
+        <div class="featured-body">
+          <span class={`badge badge--${featured.data.category}`}>
+            {categoryLabels[featured.data.category] || featured.data.category}
+          </span>
+          <h3>{featured.data.title}</h3>
+          <p class="featured-desc">{featured.data.description}</p>
+          <div class="featured-meta">
+            <time datetime={featured.data.date.toISOString()}>{formattedFeaturedDate}</time>
+            <span class="read-more">자세히 보기 →</span>
+          </div>
+        </div>
+      </a>
+    </section>
+  )}
+
+  <!-- 그 외 글 grid -->
   <section class="posts-grid container">
-    <CategoryFilter />
-    {posts.length === 0 && <p class="empty">아직 글이 없어요. 첫 글을 기다려주세요!</p>}
+    <div class="section-header">
+      <h2>📚 모든 글</h2>
+      <span class="section-sub">{rest.length > 0 ? `${rest.length}편 더 있어요` : ''}</span>
+    </div>
+    {rest.length === 0 && featured && (
+      <p class="empty">아직 한 편밖에 없어요. 더 많은 이야기를 기대해주세요!</p>
+    )}
+    {!featured && (
+      <p class="empty">아직 글이 없어요. 첫 글을 기다려주세요!</p>
+    )}
     <div class="grid">
-      {posts.map((post) => (
+      {rest.map((post) => (
         <PostCard
           title={post.data.title}
           description={post.data.description}
@@ -34,15 +115,17 @@ const posts = (await getCollection('posts', ({ data }) => !data.draft))
       ))}
     </div>
   </section>
+
 </BaseLayout>
 
 <style>
+  /* ───── Hero ───── */
   .hero {
     text-align: center;
-    padding: 3.5rem 0 2.5rem;
+    padding: 3rem 0 2.5rem;
     background: linear-gradient(180deg, var(--color-accent-light) 0%, var(--color-bg) 100%);
     border-radius: 0 0 2rem 2rem;
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
   }
 
   .hero-eyebrow {
@@ -54,7 +137,7 @@ const posts = (await getCollection('posts', ({ data }) => !data.draft))
   }
 
   .hero h1 {
-    font-size: 2.8rem;
+    font-size: clamp(2rem, 1.5rem + 2vw, 2.8rem);
     font-family: var(--font-serif);
     background: linear-gradient(135deg, var(--color-text) 0%, var(--color-accent) 100%);
     -webkit-background-clip: text;
@@ -62,14 +145,176 @@ const posts = (await getCollection('posts', ({ data }) => !data.draft))
     background-clip: text;
   }
 
-  /* 다크모드: 두 색이 모두 밝은 톤이라 contrast 약해지는 문제 — 흰색 → 살구색 그라데이션으로 강화 */
   :global([data-theme="dark"]) .hero h1 {
     background: linear-gradient(135deg, #ffffff 0%, var(--color-accent) 100%);
     -webkit-background-clip: text;
     background-clip: text;
   }
 
+  .hero-tagline {
+    margin-top: 0.75rem;
+    color: var(--color-text-light);
+    font-size: 1rem;
+    line-height: 1.6;
+  }
 
+  /* ───── Quick categories ───── */
+  .quick-cats {
+    margin-top: 1.75rem;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .quick-cat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 1rem 0.75rem;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    color: var(--color-text);
+    transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .quick-cat:hover {
+    transform: translateY(-2px);
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow);
+    opacity: 1;
+  }
+
+  .quick-cat .emoji { font-size: 1.6rem; line-height: 1; }
+  .quick-cat .label { font-size: 0.85rem; font-weight: 600; }
+  .quick-cat .count { font-size: 0.7rem; color: var(--color-text-light); }
+
+  /* ───── Section headers ───── */
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .section-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-family: var(--font-body);
+  }
+
+  .section-sub {
+    color: var(--color-text-light);
+    font-size: 0.85rem;
+  }
+
+  /* ───── Featured ───── */
+  .featured {
+    margin-bottom: 3rem;
+  }
+
+  .featured-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    background: var(--color-bg-card);
+    border-radius: calc(var(--radius) * 1.5);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s, box-shadow 0.2s;
+    color: var(--color-text);
+  }
+
+  .featured-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(61, 50, 37, 0.12);
+    opacity: 1;
+  }
+
+  :global([data-theme="dark"]) .featured-card:hover {
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  }
+
+  .featured-image {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+  }
+
+  .featured-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 0;
+    transition: transform 0.4s;
+  }
+
+  .featured-card:hover .featured-image img {
+    transform: scale(1.04);
+  }
+
+  .sponsored-tag {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+
+  .featured-body {
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .featured-body h3 {
+    margin-top: 0.75rem;
+    font-size: clamp(1.1rem, 0.9rem + 0.6vw, 1.45rem);
+    font-family: var(--font-body);
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  .featured-desc {
+    margin-top: 0.6rem;
+    color: var(--color-text-light);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .featured-meta {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--color-text-light);
+    font-size: 0.85rem;
+  }
+
+  .read-more {
+    color: var(--color-accent);
+    font-weight: 600;
+    transition: transform 0.15s;
+  }
+
+  .featured-card:hover .read-more {
+    transform: translateX(3px);
+  }
+
+  /* ───── Posts grid ───── */
   .posts-grid {
     padding-bottom: 3rem;
   }
@@ -83,16 +328,21 @@ const posts = (await getCollection('posts', ({ data }) => !data.draft))
   .empty {
     text-align: center;
     color: var(--color-text-light);
-    margin-top: 3rem;
+    margin-top: 2rem;
   }
 
+  /* ───── Responsive ───── */
   @media (max-width: 900px) {
     .grid { grid-template-columns: repeat(2, 1fr); }
+    .featured-card { grid-template-columns: 1fr; }
+    .featured-image { aspect-ratio: 16 / 9; }
   }
 
   @media (max-width: 600px) {
     .grid { grid-template-columns: 1fr; }
-    .hero h1 { font-size: 2rem; }
+    .quick-cats { grid-template-columns: repeat(2, 1fr); }
     .hero { padding: 2.5rem 0 2rem; }
+    .featured-body { padding: 1.25rem; }
   }
 </style>
+</BaseLayout>

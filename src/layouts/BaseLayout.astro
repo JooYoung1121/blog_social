@@ -1,6 +1,8 @@
 ---
 import SEOHead from '../components/SEOHead.astro';
 import SearchDialog from '../components/SearchDialog.astro';
+import ScrollToTop from '../components/ScrollToTop.astro';
+import Analytics from '@vercel/analytics/astro';
 
 interface Props {
   title: string;
@@ -74,6 +76,9 @@ const {
         </p>
       </div>
     </footer>
+
+    <ScrollToTop />
+    <Analytics />
 
     <script is:inline>
       // Dark mode - runs before paint to prevent flash
