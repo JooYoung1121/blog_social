@@ -58,6 +58,10 @@ const formattedDate = date.toLocaleDateString('ko-KR', {
     opacity: 1;
   }
 
+  :global([data-theme="dark"]) .post-card:hover {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+  }
+
   .card-image {
     position: relative;
     aspect-ratio: 16 / 10;

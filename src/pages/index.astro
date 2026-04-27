@@ -62,6 +62,13 @@ const posts = (await getCollection('posts', ({ data }) => !data.draft))
     background-clip: text;
   }
 
+  /* 다크모드: 두 색이 모두 밝은 톤이라 contrast 약해지는 문제 — 흰색 → 살구색 그라데이션으로 강화 */
+  :global([data-theme="dark"]) .hero h1 {
+    background: linear-gradient(135deg, #ffffff 0%, var(--color-accent) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+
 
   .posts-grid {
     padding-bottom: 3rem;
