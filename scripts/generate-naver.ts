@@ -60,7 +60,7 @@ export async function generateNaverGuide(config: NaverGuideConfig): Promise<stri
   lines.push('');
   lines.push('```');
   lines.push(`안녕하세요!`);
-  lines.push(`지나의 휴일입니다 :)`);
+  lines.push(`지나의 휴일 지나입니다 :)`);
   lines.push('');
   lines.push(`오늘은 ${title}에 대해 이야기해볼게요!`);
   lines.push('');

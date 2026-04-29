@@ -34,7 +34,7 @@ export const BLOG_OWNER = {
 // ──────────────────────────────────────────────
 // 인사말 / 마무리 (memory: project_blog_style_guide.md)
 // ──────────────────────────────────────────────
-export const INTRO = '안녕하세요!\n지나의 휴일입니다 :)';
+export const INTRO = '안녕하세요!\n지나의 휴일 지나입니다 :)';
 export const OUTRO =
   '오늘 포스팅은 여기서 마무리!\n궁금한 점은 댓글로 남겨주세요 😊\n그럼 안녕! 👋';
 
@@ -69,8 +69,9 @@ export const PURCHASE_TYPE_META: Record<
 > = {
   'self-purchased': {
     label: '직접 구매',
-    allowPriceInfo: true, // 직구매는 가격 표기 OK (사용자 결정)
-    toneNote: '솔직 후기, 단점도 가감없이. "당근에서 샀어요", "직접 구매했어요" 등 자연스럽게.',
+    allowPriceInfo: false,
+    toneNote:
+      '솔직 후기, 단점도 가감없이. "당근에서 샀어요", "직접 구매했어요" 등 구매 경로는 자연스럽게 쓰되 금액은 본문에 쓰지 않음.',
     guidePriority: false,
   },
   sponsored: {
@@ -99,24 +100,21 @@ export const PURCHASE_TYPE_META: Record<
 export function getForbiddenPatterns(
   purchaseType: PurchaseType = 'self-purchased',
 ): { pattern: RegExp; reason: string }[] {
-  const meta = PURCHASE_TYPE_META[purchaseType];
   const patterns: { pattern: RegExp; reason: string }[] = [];
 
   // 협찬/제공 표현은 모든 타입에서 본문 금지 (frontmatter sponsored 필드로만 표시)
   patterns.push({ pattern: /협찬\s*받/, reason: '협찬 받았다는 표현 금지 (본문)' });
   patterns.push({ pattern: /제공\s*받/, reason: '제공 받았다는 표현 금지 (본문)' });
 
-  // 가격 정보: self-purchased에서만 허용
-  if (!meta.allowPriceInfo) {
-    patterns.push({
-      pattern: /\d{3,}\s*원/,
-      reason: `가격 정보 표기 금지 (purchaseType: ${purchaseType})`,
-    });
-    patterns.push({
-      pattern: /\d+\s*만\s*원/,
-      reason: `가격 정보 표기 금지 (purchaseType: ${purchaseType})`,
-    });
-  }
+  // 가격 정보는 모든 타입에서 금지 (memory: feedback_no_sponsorship_no_specs.md)
+  patterns.push({
+    pattern: /[\d,]{3,}\s*원/,
+    reason: `가격 정보 표기 금지 (purchaseType: ${purchaseType})`,
+  });
+  patterns.push({
+    pattern: /\d+\s*만\s*원/,
+    reason: `가격 정보 표기 금지 (purchaseType: ${purchaseType})`,
+  });
 
   // 수량/사이즈는 모든 타입에서 금지 유지 (사용자 룰)
   patterns.push({ pattern: /\d+\s*개입/, reason: '수량 표기 금지' });
@@ -126,6 +124,14 @@ export function getForbiddenPatterns(
   patterns.push({
     pattern: /모유\s*수유/,
     reason: '분유 수유 중 — 모유수유 표현 금지',
+  });
+  patterns.push({
+    pattern: /직수/,
+    reason: '분유 수유 중 — 직수 표현 금지',
+  });
+  patterns.push({
+    pattern: /젖(?!병|꼭지)/,
+    reason: '분유 수유 중 — 젖 표현 금지 (젖병/젖꼭지는 OK)',
   });
 
   // AI 티 나는 필러 섹션 (memory: feedback_no_filler_sections.md)
@@ -157,7 +163,7 @@ export const FORBIDDEN_PATTERNS = getForbiddenPatterns();
 // ──────────────────────────────────────────────
 export const STRUCTURE_RULES = {
   body_min_chars: 1500, // 공백 제외
-  body_max_chars: 2500,
+  body_max_chars: 2000,
   main_keyword_count: { min: 5, max: 7 },
   subheadings: { min: 4, max: 6 },
   paragraph_max_lines: 3,
@@ -345,9 +351,7 @@ export function buildSystemPrompt(opts: PromptOptions): string {
     '',
     `# 구매 형태: ${purchaseMeta.label} (${purchaseType})`,
     `- ${purchaseMeta.toneNote}`,
-    purchaseMeta.allowPriceInfo
-      ? '- 가격 표기 OK (직구매니까 솔직하게 적어도 됨)'
-      : '- 가격 표기 금지 (수량/사이즈도 본문에 X)',
+    '- 가격 표기 금지 (직구매 포함, 수량/사이즈도 본문에 X)',
     purchaseMeta.guidePriority
       ? '- ⚠️ 체험단 가이드가 있으면 위 모든 룰보다 가이드가 최우선'
       : '',

@@ -13,7 +13,8 @@
 2) 사진 + 텍스트 파일 준비 (아래 양식대로)
 3) npm run new-post -- --input input/2026-04-27-제품명 --category baby-products
    ↳ 사진 Cloudinary 업로드 + 톤 보정 + 마크다운 뼈대 생성
-4) (Phase 2 이후) AI 자동 본문 생성
+4) Codex 비교 실험: Codex가 직접 본문 작성
+   Claude 자동 초안: npm run generate-draft 사용
 5) 본문 검토 + 수정
 6) npm run lint:posts → 룰 위반 체크
 7) git commit & push → Vercel 자동 배포
@@ -25,7 +26,7 @@
 
 ```
 input/2026-04-27-하베브릭스-아기체육관/
-├── photos/                  # 사진 원본 (HEIC/JPG/PNG, MP4 자동 스킵)
+├── photos/                  # 사진 원본 (HEIC/JPG/PNG/GIF, MP4 자동 스킵)
 │   ├── IMG_1001.HEIC
 │   ├── IMG_1002.HEIC
 │   └── ...                  # 파일명 순서 = 본문 배치 순서
@@ -67,7 +68,7 @@ input/2026-04-27-하베브릭스-아기체육관/
 
 | 값 | 설명 | 가격 표기 | 협찬 표현 본문 | 가이드 우선 |
 |---|---|---|---|---|
-| `self-purchased` | 직접 구매 | ✅ OK | ❌ | — |
+| `self-purchased` | 직접 구매 | ❌ | ❌ | — |
 | `sponsored` | 원고료+제품 협찬 | ❌ | ❌ | ✅ |
 | `gifted` | 무상 제공만 (가이드 없음) | ❌ | ❌ | — |
 | `service-experience` | 음식점·시설 등 체험단 | ❌ | ❌ | ✅ |
@@ -76,7 +77,7 @@ input/2026-04-27-하베브릭스-아기체육관/
 self-purchased
 ```
 
-> 직구매면 가격, 비교 자유롭게 OK. 협찬·체험단이면 가이드 우선 + 본문에 협찬 언급 절대 금지.
+> 직구매도 구매 경로와 사용감은 자유롭게 쓰되, 본문에 금액은 쓰지 않습니다. 협찬·체험단이면 가이드 우선 + 본문에 협찬 언급 절대 금지.
 
 ---
 
@@ -174,7 +175,7 @@ frontmatter `sponsorInfo` 필드에 들어감 (본문에는 노출 X).
 
 ### 🛒 `self-purchased` (직접 구매)
 - "당근에서 샀어요", "스마트스토어에서 직접 주문" 같은 표현 자연스럽게
-- **가격 후기 OK** — "5만원이었는데 진짜 가성비 좋아요" 같은 표현 가능
+- **금액 표기 X** — "가성비가 좋았어요"처럼 느낌만 쓰고 구체 금액은 쓰지 않음
 - 단점도 솔직하게: "근데 매트가 살짝 미끄러워서..."
 - 다른 제품과 비교 자유
 
@@ -234,14 +235,27 @@ git add . && git commit -m "feat: 새 글 — 제품명" && git push
 ### lint가 잡아내는 항목
 - ✅ 인사말/마무리 정형 문구 사용 여부
 - ✅ purchaseType별 금지 패턴 (협찬/가격/모유수유/감성컷 등)
-- ✅ 본문 글자수 1500~2500자
+- ✅ 본문 글자수 1500~2000자
 - ✅ 메인 키워드 5~7회 빈도
 - ✅ 사진 3장 이상 연속 금지
 - ✅ 명사형 소제목 검출
 
 ---
 
-## 7. AI 자동 글 생성
+## 7. Codex 비교 실험 흐름
+
+Codex 결과물과 Claude 결과물을 비교할 때는 같은 input 폴더를 사용하되, 생성 방식은 분리합니다.
+
+- Codex: `docs/codex-workflow.md`를 따라 사진 업로드 후 Markdown 본문을 직접 작성
+- Claude: 아래 `npm run generate-draft` 명령으로 Claude API 자동 초안 생성
+
+Codex 비교용 작업에서는 `npm run generate-draft`를 본문 생성에 사용하지 않습니다. 이 명령은 내부에서 Claude 모델을 호출하기 때문입니다.
+
+자세한 Codex runbook은 [`docs/codex-workflow.md`](docs/codex-workflow.md)를 참고하세요.
+
+---
+
+## 8. Claude 자동 글 생성
 
 ```bash
 npm run generate-draft -- --input input/2026-04-27-제품명 --category baby-products
@@ -283,7 +297,7 @@ ANTHROPIC_API_KEY=sk-ant-...
 
 ---
 
-## 8. 자주 묻는 질문
+## 9. 자주 묻는 질문
 
 **Q. 사진 순서를 바꾸고 싶어요**
 → `photos/` 폴더에서 파일명 prefix를 `01_`, `02_`처럼 붙이면 그 순서대로 배치됩니다.

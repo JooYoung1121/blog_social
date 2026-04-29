@@ -211,7 +211,7 @@ function buildUserPrompt(
       '---',
       '',
       '안녕하세요!',
-      '지나의 휴일입니다 :)',
+      '지나의 휴일 지나입니다 :)',
       '',
       '(여기서부터 본문 — 시스템 프롬프트의 톤·구조·금지패턴 100% 준수)',
       '...',
@@ -276,7 +276,7 @@ async function main() {
   } catch {
     try {
       const files = await fs.readdir(config.inputDir);
-      const hasImages = files.some((f) => /\.(heic|jpg|jpeg|png)$/i.test(f));
+      const hasImages = files.some((f) => /\.(heic|jpg|jpeg|png|gif)$/i.test(f));
       if (hasImages) {
         images = await processAndUpload(config.inputDir, slug, tone);
       }

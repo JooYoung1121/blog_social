@@ -10,6 +10,7 @@
 | 문서 | 언제 읽어야 하는가 |
 |---|---|
 | [`docs/blog-writing-guide.md`](docs/blog-writing-guide.md) | **모든 새 글 작성 시.** 톤, 구조, 사진 배치, SEO, 금지 규칙 정의 |
+| [`docs/codex-workflow.md`](docs/codex-workflow.md) | **Codex로 글 작성/비교 실험 시.** Claude 생성 스크립트와 분리된 작업 흐름 |
 | [`docs/homefeed-strategy.md`](docs/homefeed-strategy.md) | 홈피드 노출을 노리는 글 작성 시. 상위노출용과 스타일 분리 기준 |
 | [`docs/author-profile.md`](docs/author-profile.md) | 글에 작성자/아기/반려견을 언급할 때. 잘못된 사실(예: 모유수유) 방지 |
 | [`docs/photo-tone.md`](docs/photo-tone.md) | 사진 보정 작업 시. 기본 보정 수치 |
@@ -21,7 +22,7 @@
 
 ## 프로젝트 개요
 네이버 블로그 "지나의 휴일" (https://blog.naver.com/snf00467) 의 글 작성 + 아카이빙 시스템.
-Astro 기반 개인 웹 블로그 + 네이버 블로그 복붙 가이드를 동시 생성.
+Astro 기반 개인 웹 블로그를 생성하고, 네이버 업로드 전 웹 본문을 검토하는 흐름으로 운영.
 
 배포 사이트: https://jinas-holiday.vercel.app
 
@@ -42,6 +43,8 @@ npm run new-post -- --input <사진폴더> --category <카테고리> [옵션]
 - `--sponsor-info "브랜드명으로부터 협찬받아"`, `--product-link "URL"`
 
 또는 input 폴더에 `topic.txt`, `notes.txt`, `product-url.txt`, `sponsor.txt`, `client-guide.md` 파일을 넣으면 자동 인식. 자세한 양식은 [`docs/writing-input-guide.md`](docs/writing-input-guide.md) 참고.
+
+Codex 결과물 비교 시에는 [`docs/codex-workflow.md`](docs/codex-workflow.md)를 따른다. `npm run generate-draft`는 Claude API 기반 자동 생성이므로 Codex 초안 비교용으로 사용하지 않는다.
 
 ## 폴더 구조
 - `src/content/posts/YYYY/MM/` — Markdown 포스트 (날짜별 정리)
@@ -75,7 +78,7 @@ CLOUDINARY_API_SECRET=xxx
 - ❌ "감성 한 컷 📸" 같은 **필러 섹션**.
 - ❌ 본문에 **협찬/제공받음** 표현 (frontmatter 필드는 유지하되 본문 노출 X).
 - ❌ 본문에 **수량/사이즈(mm)/가격** 표기.
-- ❌ 본문에 **모유수유/직수/젖** 표현 — 봄이는 분유 수유 중.
+- ❌ 본문에 **모유수유/직수/젖** 표현 — 봄이는 분유 수유 중. 단, 젖병/젖꼭지 같은 제품명은 허용.
 - ❌ AI가 쓴 듯한 깔끔한 설명체 (`~에 도움이 됩니다` 등). 반드시 구어체 (`~거든요`, `~더라구요`).
 - ❌ 억지 후킹/낚시성 제목.
 

@@ -110,7 +110,7 @@ const categoryTemplates: Record<string, (title: string, images: UploadResult[]) 
     return [
       '',
       '안녕하세요!',
-      '지나의 휴일입니다 :)',
+      '지나의 휴일 지나입니다 :)',
       '',
       `<!-- 도입부: 이 제품을 사게 된 계기/고민 -->`,
       '',
@@ -143,7 +143,7 @@ const categoryTemplates: Record<string, (title: string, images: UploadResult[]) 
     return [
       '',
       '안녕하세요!',
-      '지나의 휴일입니다 :)',
+      '지나의 휴일 지나입니다 :)',
       '',
       `<!-- 도입부: 요즘 아이 성장/변화 이야기 -->`,
       '',
@@ -165,7 +165,7 @@ const categoryTemplates: Record<string, (title: string, images: UploadResult[]) 
     return [
       '',
       '안녕하세요!',
-      '지나의 휴일입니다 :)',
+      '지나의 휴일 지나입니다 :)',
       '',
       `<!-- 도입부: 방문 계기, 위치/분위기 -->`,
       '',
@@ -193,7 +193,7 @@ const categoryTemplates: Record<string, (title: string, images: UploadResult[]) 
     return [
       '',
       '안녕하세요!',
-      '지나의 휴일입니다 :)',
+      '지나의 휴일 지나입니다 :)',
       '',
       `<!-- 도입부: 여행지 소개, 방문 동기 -->`,
       '',
@@ -225,7 +225,7 @@ function defaultTemplate(title: string, images: UploadResult[]): string {
   return [
     '',
     '안녕하세요!',
-    '지나의 휴일입니다 :)',
+    '지나의 휴일 지나입니다 :)',
     '',
     `<!-- 도입부: 오늘의 이야기 -->`,
     '',
@@ -314,7 +314,7 @@ async function main() {
     try {
       const files = await fs.readdir(config.inputDir);
       const hasImages = files.some((f) =>
-        /\.(heic|jpg|jpeg|png)$/i.test(f),
+        /\.(heic|jpg|jpeg|png|gif)$/i.test(f),
       );
       if (hasImages) {
         images = await processAndUpload(config.inputDir, slug, tone);

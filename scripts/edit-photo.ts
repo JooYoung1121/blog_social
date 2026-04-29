@@ -89,7 +89,7 @@ if (process.argv[1]?.includes('edit-photo')) {
 
     await fs.mkdir(outputDir, { recursive: true });
 
-    const patterns = ['**/*.{heic,HEIC,jpg,jpeg,JPG,JPEG,png,PNG}'];
+    const patterns = ['**/*.{heic,HEIC,jpg,jpeg,JPG,JPEG,png,PNG,gif,GIF}'];
     const files = await glob(patterns, { cwd: inputDir, absolute: true });
     files.sort();
 
