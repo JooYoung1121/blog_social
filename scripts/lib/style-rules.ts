@@ -162,6 +162,7 @@ export const STRUCTURE_RULES = {
   body_max_chars: 2000,
   main_keyword_count: { min: 5, max: 7 },
   subheadings: { min: 4, max: 6 },
+  keyword_subheadings: { min: 2 },
   paragraph_max_lines: 3,
   consecutive_photos_max: 2, // 사진 3장 이상 연속 금지
   internal_links: { min: 2, max: 3 },
@@ -371,6 +372,12 @@ export function buildSystemPrompt(opts: PromptOptions): string {
     '- 인용블록(>) 또는 H2 사용',
     '- 서술형 / 감정형 / 질문형 (명사형 금지)',
     `- ${STRUCTURE_RULES.subheadings.min}~${STRUCTURE_RULES.subheadings.max}개`,
+    mainKeyword
+      ? `- 첫 소제목 또는 두 번째 소제목에 메인 키워드 "${mainKeyword}"를 자연스럽게 1회 포함`
+      : '- 첫 소제목 또는 두 번째 소제목에 메인 키워드를 자연스럽게 1회 포함',
+    `- 전체 소제목 중 최소 ${STRUCTURE_RULES.keyword_subheadings.min}개는 메인/서브 키워드, 브랜드명, 제품명 중 하나를 자연스럽게 포함`,
+    '- 각 소제목은 검색자가 궁금해할 한 가지 상황/질문에 답하는 문장으로 작성',
+    '- 모든 소제목에 같은 키워드를 반복하지 않기 (키워드 스터핑 금지)',
     '- 좋은 예: ' + SUBHEADING_PATTERNS.good_examples.slice(0, 2).join(' / '),
     '',
     '# 글 구조',
@@ -416,6 +423,10 @@ export interface LintIssue {
 export interface LintOptions {
   mainKeyword?: string;
   purchaseType?: PurchaseType;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 export function lintPostBody(
@@ -554,6 +565,9 @@ export function lintPostBody(
   const subheadings = bodyOnly.match(/^##\s+.+$/gm) || [];
   const blockquotes = bodyOnly.match(/^>\s+.+$/gm) || [];
   const totalSubheadings = subheadings.length + blockquotes.length;
+  const subheadingTexts = [...subheadings, ...blockquotes].map((heading) =>
+    heading.replace(/^(##|>)\s*/, '').trim(),
+  );
   if (
     totalSubheadings < STRUCTURE_RULES.subheadings.min ||
     totalSubheadings > STRUCTURE_RULES.subheadings.max
@@ -565,7 +579,23 @@ export function lintPostBody(
     });
   }
 
-  // 7. 명사형 소제목 검출
+  // 7. 검색 의도형 소제목에 메인 키워드가 최소 1회 들어갔는지 확인
+  if (mainKeyword && subheadingTexts.length > 0) {
+    const keywordPattern = new RegExp(escapeRegExp(mainKeyword));
+    const keywordSubheadingCount = subheadingTexts.filter((heading) =>
+      keywordPattern.test(heading),
+    ).length;
+
+    if (keywordSubheadingCount < 1) {
+      issues.push({
+        level: 'warning',
+        code: 'subheading-keyword-missing',
+        message: `소제목에 메인 키워드 "${mainKeyword}"가 없음 — 첫/두 번째 소제목에 자연스럽게 1회 포함 권장`,
+      });
+    }
+  }
+
+  // 8. 명사형 소제목 검출
   for (const bad of SUBHEADING_PATTERNS.bad_examples) {
     if (bodyOnly.includes(bad)) {
       issues.push({
