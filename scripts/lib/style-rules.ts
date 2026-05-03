@@ -102,10 +102,6 @@ export function getForbiddenPatterns(
 ): { pattern: RegExp; reason: string }[] {
   const patterns: { pattern: RegExp; reason: string }[] = [];
 
-  // 협찬/제공 표현은 모든 타입에서 본문 금지 (frontmatter sponsored 필드로만 표시)
-  patterns.push({ pattern: /협찬\s*받/, reason: '협찬 받았다는 표현 금지 (본문)' });
-  patterns.push({ pattern: /제공\s*받/, reason: '제공 받았다는 표현 금지 (본문)' });
-
   // 가격 정보는 모든 타입에서 금지 (memory: feedback_no_sponsorship_no_specs.md)
   patterns.push({
     pattern: /[\d,]{3,}\s*원/,
@@ -362,6 +358,7 @@ export function buildSystemPrompt(opts: PromptOptions): string {
     '',
     '# 절대 금지',
     ...forbiddenPatterns.map((p) => `- ${p.reason}`),
+    '- 협찬/제공 표현은 고객 가이드나 법정 고지로 요구된 상단 1회만 허용. 그 외 본문 반복 언급 금지',
     '- "감성 한 컷", "감성샷" 같은 의미 없는 사진 나열 섹션',
     '- 명사형 소제목 ("성분", "디자인", "결론" 등)',
     '',
@@ -438,6 +435,33 @@ export function lintPostBody(
 
   // frontmatter 분리
   const bodyOnly = body.replace(/^---[\s\S]*?---\s*/m, '').trim();
+
+  // 0. 협찬/제공 표현은 고객 가이드나 법정 고지로 요구된 상단 1회만 허용
+  const canHaveDisclosure = purchaseType !== 'self-purchased';
+  const disclosurePattern = /제품을\s*무상으로\s*제공\s*받았음/;
+  const disclosureMatch = bodyOnly.match(disclosurePattern);
+  const disclosureInHeader =
+    !!disclosureMatch && bodyOnly.indexOf(disclosureMatch[0]) <= 120;
+  const bodyWithoutAllowedDisclosure =
+    canHaveDisclosure && disclosureInHeader
+      ? bodyOnly.replace(disclosurePattern, '')
+      : bodyOnly;
+
+  if (/협찬\s*받|제공\s*받/.test(bodyWithoutAllowedDisclosure)) {
+    issues.push({
+      level: 'error',
+      code: 'sponsorship-disclosure',
+      message:
+        '협찬/제공 표현은 고객 가이드나 법정 고지로 요구된 상단 1회만 허용',
+    });
+  }
+  if (!canHaveDisclosure && disclosureMatch) {
+    issues.push({
+      level: 'error',
+      code: 'sponsorship-disclosure',
+      message: '직접 구매 글에는 무상 제공 고지 문구를 넣지 않음',
+    });
+  }
 
   // 1. 금지 패턴 (purchaseType별 분기)
   for (const { pattern, reason } of forbiddenPatterns) {
