@@ -6,9 +6,12 @@
 
 - `AGENTS.md`
 - `docs/blog-writing-guide.md`
+- `docs/ai-friendly-guide.md` — AI 탭/GPT/Gemini 인용 친화 레이어
 - `docs/writing-input-guide.md`
 - `docs/author-profile.md`
 - `docs/photo-tone.md`
 - `docs/homefeed-strategy.md`
 
 Codex와 결과물을 비교하는 작업에서는 `docs/codex-workflow.md`도 함께 확인하세요. `npm run generate-draft`는 Claude API 기반 자동 초안 생성 명령이므로, Codex 초안 비교용으로 사용하지 않습니다.
+
+A/B 비교 모드(input 폴더에 `AB.txt` 마커)로 작업할 때는 `docs/ab-comparison-protocol.md`를 따라 슬러그/frontmatter/Cloudinary 공유 룰을 지키세요.

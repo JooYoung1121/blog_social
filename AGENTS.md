@@ -10,6 +10,8 @@
 | 문서 | 언제 읽어야 하는가 |
 |---|---|
 | [`docs/blog-writing-guide.md`](docs/blog-writing-guide.md) | **모든 새 글 작성 시.** 톤, 구조, 사진 배치, SEO, 금지 규칙 정의 |
+| [`docs/ai-friendly-guide.md`](docs/ai-friendly-guide.md) | **AI 탭 / GPT / Gemini / Perplexity 인용을 노릴 때.** 기존 글쓰기 가이드 위에 얹는 AI 친화 레이어 (TL;DR, FAQ, 엔티티, 구조화 데이터) |
+| [`docs/ab-comparison-protocol.md`](docs/ab-comparison-protocol.md) | **A/B 비교 모드 (input 폴더에 `AB.txt` 마커가 있을 때).** Claude/Codex 두 도구가 같은 입력으로 두 글을 작성하는 절차와 측정 지표 |
 | [`docs/codex-workflow.md`](docs/codex-workflow.md) | **Codex로 글 작성/비교 실험 시.** Claude 생성 스크립트와 분리된 작업 흐름 |
 | [`docs/homefeed-strategy.md`](docs/homefeed-strategy.md) | 홈피드 노출을 노리는 글 작성 시. 상위노출용과 스타일 분리 기준 |
 | [`docs/author-profile.md`](docs/author-profile.md) | 글에 작성자/아기/반려견을 언급할 때. 잘못된 사실(예: 모유수유) 방지 |
