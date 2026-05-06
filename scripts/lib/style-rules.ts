@@ -169,6 +169,28 @@ export const STRUCTURE_RULES = {
 } as const;
 
 // ──────────────────────────────────────────────
+// AI 친화 레이어 — Phase 1 (docs/ai-friendly-guide.md)
+// target === 'search' | 'info' 일 때만 활성. homefeed에선 비활성(감성 흐름 우선).
+// 현재는 buildSystemPrompt 권장사항으로만 사용. lint 검사는 추후 Phase 3에서 도입 검토.
+// ──────────────────────────────────────────────
+export const AI_FRIENDLY_RULES = {
+  enabled_targets: ['search', 'info', 'both'] as const,
+  tldr: {
+    required: false, // Phase 1에선 권장만
+    bullets: { min: 2, max: 4 },
+    one_liner_max_chars: 80,
+  },
+  faq: {
+    required: false, // Phase 1에선 권장만
+    count: { min: 3, max: 5 },
+    answer_chars: { min: 30, max: 80 },
+    heading_exception: true, // 명사형 소제목 금지 룰의 예외 (FAQ 섹션 H2 1개)
+  },
+  description_chars: { min: 80, max: 150 }, // frontmatter description
+  alt_chars: { min: 50, max: 125 }, // 이미지 alt 풀어쓰기
+} as const;
+
+// ──────────────────────────────────────────────
 // 사진 보정 톤 (memory: feedback_photo_tone.md)
 // iPhone 편집 기준 -100~+100 스케일
 // ──────────────────────────────────────────────
@@ -399,6 +421,40 @@ export function buildSystemPrompt(opts: PromptOptions): string {
     target === 'homefeed' && 'rules' in targetRules
       ? targetRules.rules.map((r) => `- ${r}`).join('\n')
       : '',
+    '',
+    // AI 친화 레이어 — Phase 1 (docs/ai-friendly-guide.md)
+    // homefeed 타깃은 비활성 (감성/스토리 흐름 우선). 그 외 타깃에서만 권장.
+    target !== 'homefeed'
+      ? [
+          '# AI 친화 레이어 (선택 권장 — Phase 1)',
+          '네이버 AI 탭 / GPT / Gemini / Perplexity 같은 AI 검색이 우리 글을 인용하기 쉽도록 다음 두 블록을 본문에 덧붙임. 본문 톤은 위 룰 그대로 유지.',
+          '',
+          '## 1) TL;DR 박스 — 인사말 직후 위치',
+          '- 인사말 → 빈 줄 → 인용블록(>) 안에 한 줄 요약 + bullet',
+          `- 한 줄 요약 ${AI_FRIENDLY_RULES.tldr.one_liner_max_chars}자 이내, bullet ${AI_FRIENDLY_RULES.tldr.bullets.min}~${AI_FRIENDLY_RULES.tldr.bullets.max}개`,
+          '- 형식:',
+          '  > **한 줄 요약**: <핵심 결론 한 문장>',
+          '  > - <포인트 1 (사실 위주)>',
+          '  > - <포인트 2>',
+          '  > - <포인트 3>',
+          '- 톤: bullet은 짧은 사실문 OK, 한 줄 요약은 본문 구어체와 자연스럽게 어울리게',
+          '',
+          '## 2) FAQ 섹션 — 마무리 인사 직전 위치',
+          `- "## 자주 묻는 질문 정리해드려요" H2 1개 + Q&A ${AI_FRIENDLY_RULES.faq.count.min}~${AI_FRIENDLY_RULES.faq.count.max}개`,
+          '- 형식:',
+          '  ## 자주 묻는 질문 정리해드려요',
+          '  > **Q. <질문>**',
+          `  > <답변 — 구어체 유지, ${AI_FRIENDLY_RULES.faq.answer_chars.min}~${AI_FRIENDLY_RULES.faq.answer_chars.max}자>`,
+          '- 답변은 반드시 구어체 ("~했어요", "~더라구요"). AI 정답체("~합니다", "~을 권장합니다") 금지',
+          '- 이 H2 헤딩 1개는 "명사형 소제목 금지" 룰의 예외 (위 형식 그대로 사용)',
+          `- 본문 일반 소제목을 1개 줄여서 전체 소제목 수 ${STRUCTURE_RULES.subheadings.min}~${STRUCTURE_RULES.subheadings.max}개 룰 유지`,
+          '',
+          '## 분량 / 우선순위',
+          `- TL;DR + FAQ 추가로 길어지면 본문 줄여서 ${STRUCTURE_RULES.body_min_chars}~${STRUCTURE_RULES.body_max_chars}자 유지`,
+          '- 체험단 가이드(client-guide.md)와 충돌 시 가이드가 우선 — AI 친화 레이어는 항상 양보',
+          '- getForbiddenPatterns 룰(가격/협찬/모유수유/필러 등) 위반은 절대 X',
+        ].join('\n')
+      : '# AI 친화 레이어 (비활성)\n- 홈피드 타깃 글이므로 TL;DR/FAQ 추가하지 않음. 첫 3줄 감성 후킹 + 일기 흐름 우선.',
     '',
     `# 카테고리: ${category} (${categoryDesc})`,
     productName ? `# 제품/장소: ${productName}` : '',
