@@ -51,7 +51,7 @@ Codex 결과물 비교 시에는 [`docs/codex-workflow.md`](docs/codex-workflow.
 ## 폴더 구조
 - `src/content/posts/YYYY/MM/` — Markdown 포스트 (날짜별 정리)
 - `src/pages/posts/[...slug].astro` — 웹 블로그 글 페이지
-- `src/pages/naver/[...slug].astro` — 네이버 복붙용 클린 HTML (신규 생성 X, 기존만 유지)
+- `src/pages/naver/[...slug].astro` — **네이버 업로드 모드** (블록 단위 복사 버튼 + 사진/영상 삽입 마커, 모바일 친화). 모든 발행 글에 자동 생성됨
 - `scripts/` — CLI 도구 (new-post, upload-images, generate-naver)
 
 ## 환경변수 (.env)
@@ -92,7 +92,7 @@ CLOUDINARY_API_SECRET=xxx
 
 ### 산출물 / 배포
 - frontmatter는 **`draft: false`** 로 생성 (바로 발행 상태).
-- **네이버 복붙용 산출물 별도 생성 X.** `generate-naver.ts` 실행하지 않음. 웹 본문 직접 참고.
+- **정적 export(`generate-naver.ts`)는 실행하지 않음.** 네이버 업로드는 라이브 페이지 `/naver/<slug>`(업로드 모드)에서 블록 단위로 복붙. 사진은 input 원본에서 직접 업로드, 영상은 `<!-- video: 설명 -->` 마커 위치에 직접 삽입(DIA 영상 가점).
 - 작업 완료 시 **자동 git commit + push.** 매번 별도 요청 없이 진행.
 
 ### 코드 작업 시 (Astro 라우팅 주의)

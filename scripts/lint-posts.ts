@@ -54,6 +54,8 @@ async function lintFile(filePath: string): Promise<PostReport> {
   const issues = lintPostBody(content, {
     mainKeyword: fm.mainKeyword,
     purchaseType,
+    category: fm.category,
+    target: fm.target as 'search' | 'homefeed' | 'both' | undefined,
   });
 
   return {

@@ -158,7 +158,7 @@ export const FORBIDDEN_PATTERNS = getForbiddenPatterns();
 // 분량 / 구조 룰 (memory: project_blog_style_guide.md, project_top_blogger_structure.md)
 // ──────────────────────────────────────────────
 export const STRUCTURE_RULES = {
-  body_min_chars: 1500, // 공백 제외
+  body_min_chars: 1500, // 공백 제외 (기본값 — 카테고리 차등은 BODY_CHARS_BY_CATEGORY)
   body_max_chars: 2000,
   main_keyword_count: { min: 5, max: 7 },
   subheadings: { min: 4, max: 6 },
@@ -167,6 +167,53 @@ export const STRUCTURE_RULES = {
   consecutive_photos_max: 2, // 사진 3장 이상 연속 금지
   internal_links: { min: 2, max: 3 },
 } as const;
+
+// ──────────────────────────────────────────────
+// 글자수 카테고리 차등 (2026 통합검색 대응)
+//
+// 근거: 2026년 네이버는 블로그·카페·웹을 한 영역에서 경쟁시키는 통합 랭킹으로
+// 전환되며, 경쟁 키워드일수록 더 길고 구조화된 문서가 상위에 노출되는 경향이
+// 보고됨 (업계 분석, 확정된 공식 수치 아님):
+//   - 로카포스팅 "네이버 블로그 상위노출 체크리스트 2026"
+//     https://locaposting.com/blog/naver-seo-checklist
+//   - adsensefarm "네이버 블로그 검색 로직 변화 2026"
+//     https://adsensefarm.kr/naver-blog-search-algorithm-2026-ai-strategy/
+//
+// 운영 판단: 경쟁이 치열한 리뷰/여행은 상향, 감성·일기형(홈피드)은 기존 유지.
+// target === 'homefeed'면 감성 흐름 우선이라 길이를 강제하지 않고 기본값으로 둠.
+// ──────────────────────────────────────────────
+export const BODY_CHARS_BY_CATEGORY: Record<
+  string,
+  { min: number; max: number }
+> = {
+  'baby-products': { min: 2000, max: 2500 }, // 경쟁 키워드 多
+  travel: { min: 2000, max: 2500 },
+  food: { min: 1700, max: 2200 },
+  parenting: { min: 1500, max: 2000 }, // 일기형 — 기존 유지
+  'daily-life': { min: 1500, max: 2000 },
+};
+
+/**
+ * 카테고리·타깃별 본문 글자수 권장 범위.
+ * homefeed 타깃은 감성/스토리 우선이라 기본값(1500~2000)을 쓴다.
+ */
+export function getBodyCharRange(
+  category?: string,
+  target?: 'search' | 'homefeed' | 'both',
+): { min: number; max: number } {
+  if (target === 'homefeed') {
+    return {
+      min: STRUCTURE_RULES.body_min_chars,
+      max: STRUCTURE_RULES.body_max_chars,
+    };
+  }
+  return (
+    (category && BODY_CHARS_BY_CATEGORY[category]) || {
+      min: STRUCTURE_RULES.body_min_chars,
+      max: STRUCTURE_RULES.body_max_chars,
+    }
+  );
+}
 
 // ──────────────────────────────────────────────
 // AI 친화 레이어 — Phase 1 (docs/ai-friendly-guide.md)
@@ -210,11 +257,49 @@ export const PHOTO_TONE = {
 // 사진 처리 룰
 // ──────────────────────────────────────────────
 export const PHOTO_RULES = {
-  skip_video: true, // MP4 등 영상 스킵 (memory: feedback_skip_video.md)
+  skip_video: true, // MP4 등 영상 파일 자체는 본문에 임베드하지 않음 (사용자가 네이버에서 직접 주입)
   use_all_photos: true, // 제공 사진 전부 사용 (memory: feedback_use_all_photos.md)
   preserve_order: true, // 원본 파일 순서 유지 (memory: feedback_photo_order.md)
   consecutive_max: 2,
   must_have_text_after: true, // 사진 뒤에 반드시 텍스트
+  // 영상 삽입 마커 (2026 DIA 영상 가점 대응)
+  // MP4는 여전히 스킵하지만, 영상이 어울리는 지점에 아래 HTML 주석 마커를 남겨
+  // 네이버 업로드 모드(/naver/[slug]) 페이지가 "🎬 여기 영상 삽입"으로 안내한다.
+  // 마커는 웹 렌더링에는 보이지 않음(HTML 주석). 예: <!-- video: 봄이 반응 영상 -->
+  video_marker: '<!-- video: {설명} -->',
+} as const;
+
+// ──────────────────────────────────────────────
+// 저자 전문성 / 출처 신호 (2026 통합 랭킹 신뢰도 대응)
+//
+// 근거: 2026 네이버는 AI로 출처 신뢰도(공신력·전문성·실제 경험·출처 투명성)를
+// 판별해 통합 랭킹에 반영한다고 안내 (네이버 공식 방향).
+//   - The Egg "How Naver AI search is reshaping the Korean digital landscape"
+//     https://www.theegg.com/ko/insights/how-naver-ai-search-is-reshaping-the-korean-digital-landscape/
+//   - adsensefarm 2026 검색 로직 변화 (위 링크)
+// AI가 "실제 경험"을 높게 평가하므로 구체적 경험 신호가 핵심.
+//
+// 우리 룰과의 충돌 주의: "구체적 금액/수량"은 신뢰 신호이지만, 본 블로그는
+// 가격·수량·사이즈 본문 표기를 금지(getForbiddenPatterns)하므로 금액은 쓰지 않는다.
+// 대신 날짜·기간·사용 횟수·과정 같은 비(非)가격 경험 신호로 대체한다.
+// ──────────────────────────────────────────────
+export const AUTHORITY_SIGNALS = {
+  // 본문에 자연스럽게 녹일 경험 신호 (가격/수량 제외)
+  experience_signals: [
+    '사용 기간·시점 ("2주 정도 써보니", "한 달 가까이")',
+    '구체적 상황·과정 ("새벽 수유 끝나고", "외출할 때마다")',
+    '봄이의 실제 반응·변화 (전/후 비교)',
+    '반복 사용으로 알게 된 디테일 (꿀팁 섹션)',
+  ],
+  // 외부 공식 출처 링크 — 본문 1~2개 권장 (협찬 표현과 무관, 정보 신뢰도용)
+  external_sources: {
+    recommended: { min: 1, max: 2 },
+    examples: [
+      '브랜드 공식몰/공식 제품 페이지 (productLink)',
+      '공공·공식 정보 페이지 (성분·안전 기준 등)',
+    ],
+    note: '협찬/제공 표현은 본문에 쓰지 않되, 정보 출처 링크는 신뢰 신호로 허용',
+  },
 } as const;
 
 // ──────────────────────────────────────────────
@@ -222,7 +307,8 @@ export const PHOTO_RULES = {
 // ──────────────────────────────────────────────
 export const PUBLISHING_RULES = {
   draft: false, // 새 글 바로 발행 (memory: feedback_draft_false.md)
-  generate_naver_guide: false, // 네이버 복붙용 별도 생성 X (memory: feedback_no_naver_export.md)
+  generate_naver_guide: false, // 정적 export(generate-naver.ts) X. 네이버 업로드는 라이브 페이지 /naver/[slug] 사용
+
   auto_commit_push: true, // 작업 후 자동 커밋+푸시 (memory: feedback_auto_commit_push.md)
   client_guide_priority: true, // 체험단 가이드 > SEO 룰 (memory: feedback_client_guide_priority.md)
 } as const;
@@ -351,6 +437,7 @@ export function buildSystemPrompt(opts: PromptOptions): string {
     intent === 'info' ? STORY_STRUCTURE.info : STORY_STRUCTURE.review;
 
   const categoryDesc = CATEGORY_META[category]?.description || '';
+  const bodyRange = getBodyCharRange(category, target);
 
   return [
     `당신은 "${BLOG_OWNER.blogName}" 블로그(${BLOG_OWNER.naverBlog})의 글을 ${BLOG_OWNER.realName}님 톤으로 작성하는 어시스턴트입니다.`,
@@ -389,6 +476,7 @@ export function buildSystemPrompt(opts: PromptOptions): string {
     `- 사진 ${PHOTO_RULES.consecutive_max}장까지만 연속 (3장 이상 금지)`,
     `- 사진 뒤에 반드시 텍스트 1~${STRUCTURE_RULES.paragraph_max_lines}줄`,
     '- 제공된 사진은 영상(MP4) 제외 전부 사용, 원본 순서 유지',
+    `- 영상이 어울리는 핵심 장면(반응/사용 시연 등)이 있으면 그 위치에 영상 삽입 마커 \`${PHOTO_RULES.video_marker}\`를 1개 정도 남김 (MP4는 임베드하지 않음 — 네이버 업로드 시 직접 삽입, 영상 포함 글에 검색 가점)`,
     '',
     '# 소제목',
     '- 인용블록(>) 또는 H2 사용',
@@ -405,8 +493,8 @@ export function buildSystemPrompt(opts: PromptOptions): string {
     '# 글 구조',
     ...structureFlow,
     '',
-    '# 분량 (검색 상위노출 기준)',
-    `- 본문 ${STRUCTURE_RULES.body_min_chars}~${STRUCTURE_RULES.body_max_chars}자 (공백 제외)`,
+    '# 분량 (검색 상위노출 기준 — 2026 통합검색 카테고리 차등)',
+    `- 본문 ${bodyRange.min}~${bodyRange.max}자 (공백 제외, 카테고리 "${category}"${target === 'homefeed' ? ' · 홈피드' : ''} 기준)`,
     mainKeyword
       ? `- 메인 키워드 "${mainKeyword}" ${STRUCTURE_RULES.main_keyword_count.min}~${STRUCTURE_RULES.main_keyword_count.max}회 자연 반복`
       : `- 메인 키워드 ${STRUCTURE_RULES.main_keyword_count.min}~${STRUCTURE_RULES.main_keyword_count.max}회 자연 반복`,
@@ -414,6 +502,12 @@ export function buildSystemPrompt(opts: PromptOptions): string {
       ? `- 서브 키워드 (자연스럽게 1~2회씩): ${subKeywords.join(', ')}`
       : '',
     `- 내부 링크 ${STRUCTURE_RULES.internal_links.min}~${STRUCTURE_RULES.internal_links.max}개`,
+    '',
+    '# 저자 전문성 / 출처 신호 (2026 통합 랭킹 신뢰도)',
+    '- AI가 "실제 경험"을 높게 평가하므로 일반론 대신 구체적 경험 신호를 녹임:',
+    ...AUTHORITY_SIGNALS.experience_signals.map((s) => `  - ${s}`),
+    '- 단, 가격/수량/사이즈는 본문 금지 — 금액 대신 날짜·기간·과정·반응으로 신뢰도를 만든다',
+    `- 신뢰 가능한 외부 공식 출처 링크 ${AUTHORITY_SIGNALS.external_sources.recommended.min}~${AUTHORITY_SIGNALS.external_sources.recommended.max}개를 자연스럽게 (${AUTHORITY_SIGNALS.external_sources.note})`,
     '',
     `# 타겟: ${target}`,
     `- ${targetRules.style}`,
@@ -450,7 +544,7 @@ export function buildSystemPrompt(opts: PromptOptions): string {
           `- 본문 일반 소제목을 1개 줄여서 전체 소제목 수 ${STRUCTURE_RULES.subheadings.min}~${STRUCTURE_RULES.subheadings.max}개 룰 유지`,
           '',
           '## 분량 / 우선순위',
-          `- TL;DR + FAQ 추가로 길어지면 본문 줄여서 ${STRUCTURE_RULES.body_min_chars}~${STRUCTURE_RULES.body_max_chars}자 유지`,
+          `- TL;DR + FAQ 추가로 길어지면 본문 줄여서 ${bodyRange.min}~${bodyRange.max}자 유지`,
           '- 체험단 가이드(client-guide.md)와 충돌 시 가이드가 우선 — AI 친화 레이어는 항상 양보',
           '- getForbiddenPatterns 룰(가격/협찬/모유수유/필러 등) 위반은 절대 X',
         ].join('\n')
@@ -479,6 +573,8 @@ export interface LintIssue {
 export interface LintOptions {
   mainKeyword?: string;
   purchaseType?: PurchaseType;
+  category?: string; // 글자수 카테고리 차등 (BODY_CHARS_BY_CATEGORY)
+  target?: 'search' | 'homefeed' | 'both';
 }
 
 function escapeRegExp(value: string): string {
@@ -495,7 +591,9 @@ export function lintPostBody(
       ? { mainKeyword: optsOrKeyword }
       : optsOrKeyword || {};
 
-  const { mainKeyword, purchaseType = 'self-purchased' } = opts;
+  const { mainKeyword, purchaseType = 'self-purchased', category, target } =
+    opts;
+  const bodyRange = getBodyCharRange(category, target);
 
   const issues: LintIssue[] = [];
   const forbiddenPatterns = getForbiddenPatterns(purchaseType);
@@ -544,18 +642,18 @@ export function lintPostBody(
   // 2. 글자수
   const charCount = bodyOnly.replace(/!\[.*?\]\(.*?\)/g, '').replace(/\s/g, '')
     .length;
-  if (charCount < STRUCTURE_RULES.body_min_chars) {
+  if (charCount < bodyRange.min) {
     issues.push({
       level: 'warning',
       code: 'too-short',
-      message: `본문 ${charCount}자 (이미지 제외, 공백 제외) — 최소 ${STRUCTURE_RULES.body_min_chars}자 권장`,
+      message: `본문 ${charCount}자 (이미지 제외, 공백 제외) — 최소 ${bodyRange.min}자 권장${category ? ` (카테고리 ${category})` : ''}`,
     });
   }
-  if (charCount > STRUCTURE_RULES.body_max_chars) {
+  if (charCount > bodyRange.max) {
     issues.push({
       level: 'warning',
       code: 'too-long',
-      message: `본문 ${charCount}자 — 권장 ${STRUCTURE_RULES.body_max_chars}자 이내`,
+      message: `본문 ${charCount}자 — 권장 ${bodyRange.max}자 이내${category ? ` (카테고리 ${category})` : ''}`,
     });
   }
 
