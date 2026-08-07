@@ -163,6 +163,33 @@ const fullText = blocks
   })
   .join('\n\n');
 
+// 서식 포함 복사용 HTML.
+// 스마트에디터가 외부 HTML을 받아 이미지까지 가져오면 복붙 1회로 끝나고,
+// 안 되면 아래 블록 단위 복사로 넘어가면 된다 (그래서 "실험" 라벨).
+function esc(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+const fullHtml = blocks
+  .map((b) => {
+    if (b.kind === 'photo') return `<p><img src="${b.url}" alt="${esc(b.alt)}" /></p>`;
+    if (b.kind === 'video')
+      return `<p>[🎬 여기 영상/클립 삽입${b.note ? ` — ${esc(b.note)}` : ''}]</p>`;
+    if (b.kind === 'heading') return `<h2>${esc(b.text)}</h2>`;
+    if (b.kind === 'quote')
+      return `<blockquote>${esc(b.text).replace(/\n/g, '<br />')}</blockquote>`;
+    return b.text
+      .split(/\n{2,}/)
+      .map((p) => `<p>${esc(p).replace(/\n/g, '<br />')}</p>`)
+      .join('');
+  })
+  .join('\n');
+
+const photoUrlList = photos.map((p) => p.url).join('\n');
+
 // 발행 전 체크리스트 (2026 기준)
 const checklist = [
   '제목에 메인 키워드가 앞쪽에 있는지',
@@ -378,6 +405,12 @@ const checklist = [
         color: #8a6d00;
       }
       hr { border: none; border-top: 1px solid #eee; margin: 1.6rem 0; }
+      .hint-sm {
+        margin: 0.35rem 0 0;
+        font-size: 0.75rem;
+        color: #6b7280;
+        line-height: 1.5;
+      }
       .full-copy {
         width: 100%;
         margin-top: 0.5rem;
@@ -408,8 +441,22 @@ const checklist = [
         <li>사진 카드가 나오면 <b>저장</b>(또는 사진 길게 눌러 저장) 후 그 자리에 업로드</li>
         <li>🟦 영상 자리에는 클립/동영상 삽입</li>
       </ol>
-      <button class="full-copy" type="button" id="btn-full">📄 본문 전체 한 번에 복사 (PC용 · 사진 자리는 표시로 남음)</button>
+      <button class="full-copy" type="button" id="btn-rich">
+        ⚡ 서식 + 사진까지 한 번에 복사 <b>(실험)</b>
+      </button>
+      <p class="hint-sm">
+        네이버 에디터에 붙여넣어 보고, 사진이 같이 들어오면 그대로 발행하면 됩니다.
+        글자만 들어오거나 깨지면 <b>Ctrl+Z</b> 후 아래 블록 방식으로 진행하세요.
+      </p>
+      <button class="full-copy" type="button" id="btn-full">📄 본문 텍스트만 전체 복사 (사진 자리는 표시로 남음)</button>
+      {photoTotal > 0 && (
+        <button class="full-copy" type="button" id="btn-photo-urls">
+          🖼️ 사진 URL {photoTotal}개 전체 복사 (PC 일괄 다운로드용)
+        </button>
+      )}
       <textarea id="full-src" hidden>{fullText}</textarea>
+      <textarea id="rich-src" hidden>{fullHtml}</textarea>
+      <textarea id="photo-urls" hidden>{photoUrlList}</textarea>
     </div>
 
     <details class="checklist">
@@ -559,12 +606,46 @@ const checklist = [
         save();
       });
 
+      function flash(btn, msg) {
+        const original = btn.innerHTML;
+        btn.textContent = msg;
+        setTimeout(() => { btn.innerHTML = original; }, 1800);
+      }
+
       const btnFull = document.getElementById('btn-full');
       btnFull.addEventListener('click', async () => {
         await copyText(document.getElementById('full-src').value);
-        const original = btnFull.textContent;
-        btnFull.textContent = '✅ 본문 전체 복사됨';
-        setTimeout(() => { btnFull.textContent = original; }, 1500);
+        flash(btnFull, '✅ 본문 전체 복사됨');
+      });
+
+      const btnPhotoUrls = document.getElementById('btn-photo-urls');
+      if (btnPhotoUrls) {
+        btnPhotoUrls.addEventListener('click', async () => {
+          await copyText(document.getElementById('photo-urls').value);
+          flash(btnPhotoUrls, '✅ 사진 URL 복사됨');
+        });
+      }
+
+      // 서식 포함(HTML) 복사 — 스마트에디터가 이미지까지 받아주는지 시도
+      const btnRich = document.getElementById('btn-rich');
+      btnRich.addEventListener('click', async () => {
+        const html = document.getElementById('rich-src').value;
+        const plain = document.getElementById('full-src').value;
+        try {
+          if (!navigator.clipboard || typeof ClipboardItem === 'undefined') {
+            throw new Error('unsupported');
+          }
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              'text/html': new Blob([html], { type: 'text/html' }),
+              'text/plain': new Blob([plain], { type: 'text/plain' }),
+            }),
+          ]);
+          flash(btnRich, '✅ 서식 복사됨 — 에디터에 붙여넣어 확인');
+        } catch {
+          await copyText(plain);
+          flash(btnRich, '⚠️ 서식 복사 미지원 — 텍스트만 복사됨');
+        }
       });
     </script>
   </body>

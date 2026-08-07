@@ -2,10 +2,16 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import Anthropic from '@anthropic-ai/sdk';
+import { getCollection } from 'astro:content';
 import {
   buildSystemPrompt,
+  STRUCTURE_RULES,
   type PurchaseType,
 } from '../../../../scripts/lib/style-rules';
+import {
+  suggestForDraft,
+  type PostMeta,
+} from '../../../../scripts/lib/related-posts';
 
 interface GenerateBody {
   category: string;
@@ -56,6 +62,36 @@ export const POST: APIRoute = async ({ request }) => {
       clientGuide,
     });
 
+    // 내부 링크 후보 — 발행된 글 중 연관도 높은 순.
+    // (룰은 2~3개를 요구하는데 실제 글엔 0개였다 → 후보를 프롬프트로 직접 넘긴다)
+    let relatedBlock = '';
+    try {
+      const published = await getCollection('posts', ({ data }) => !data.draft);
+      const all: PostMeta[] = published.map((p) => ({
+        slug: p.id,
+        title: p.data.title,
+        category: p.data.category,
+        tags: p.data.tags,
+        mainKeyword: p.data.mainKeyword,
+        date: p.data.date.toISOString().slice(0, 10),
+      }));
+      const related = suggestForDraft(
+        { title: topic, category, mainKeyword, tags: subKeywords },
+        all,
+        STRUCTURE_RULES.internal_links.max,
+      );
+      if (related.length > 0) {
+        relatedBlock = [
+          `## 내부 링크 후보 (${STRUCTURE_RULES.internal_links.min}~${STRUCTURE_RULES.internal_links.max}개를 본문 문맥 안에 자연스럽게 넣기)`,
+          ...related.map((r) => `- ${r.markdown}`),
+          '문장 흐름에 녹여서 넣기. "관련 글 모음" 같은 별도 목록 섹션은 만들지 않는다.',
+          '',
+        ].join('\n');
+      }
+    } catch (err) {
+      console.warn('[generate] related posts skipped', err);
+    }
+
     const userText = [
       `다음 정보로 "지나의 휴일" 블로그 글 한 편을 작성해주세요. 시스템 프롬프트의 모든 룰을 정확히 따라주세요.`,
       ``,
@@ -72,6 +108,7 @@ export const POST: APIRoute = async ({ request }) => {
       notes || '(없음 — 사진과 주제를 보고 추정해서 작성)',
       ``,
       productUrl ? `## 제품 링크\n${productUrl}\n` : '',
+      relatedBlock,
       `## 제공된 사진 ${imageUrls.length}장 (아래 멀티모달 입력)`,
       `사진은 본문에 모두 포함시켜야 하며, 원본 순서대로 1~2장씩 배치 후 1~2줄 짧은 텍스트로 설명하세요. 사진 3장 이상 연속 절대 금지. 무엇이 찍혀있는지 시각적으로 파악해서 캡션을 써주세요.`,
       ``,

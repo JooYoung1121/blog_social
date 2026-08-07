@@ -18,7 +18,6 @@ export const prerender = false;
     <header>
       <h1>새 글 작성</h1>
       <div class="header-actions">
-        <button id="btn-test-fill" class="btn-ghost" type="button" title="하베브릭스 글 데이터로 폼 자동 입력 (사진 업로드 스킵)">🧪 테스트 데이터</button>
         <button id="logout" class="btn-ghost">로그아웃</button>
       </div>
     </header>
@@ -144,7 +143,11 @@ export const prerender = false;
       <section class="step">
         <h2>4. 미리보기 & 수정</h2>
         <textarea id="markdown" rows="24" placeholder="AI가 생성한 마크다운이 여기 표시됩니다. 수정 가능."></textarea>
-        <button id="btn-lint" class="btn-ghost" type="button" style="margin-top:0.6rem;">🔍 룰 검사 (lint)</button>
+        <div class="btn-row">
+          <button id="btn-lint" class="btn-ghost" type="button">🔍 룰 검사 (lint)</button>
+          <button id="btn-preview" class="btn-ghost" type="button">👁 미리보기</button>
+        </div>
+        <div id="preview" class="preview" hidden></div>
         <div id="lint-result" class="lint" hidden></div>
       </section>
 
@@ -208,63 +211,142 @@ export const prerender = false;
         slugInput.dataset.manual = '1';
       });
 
-      // ─── Photo upload ───────────────────────
+      // ─── Photo upload (동시 3개 · 원본 순서 보존) ───
+      const UPLOAD_CONCURRENCY = 3;
+
       photoInput.addEventListener('change', async () => {
-        const files = Array.from(photoInput.files || []);
+        // 파일 선택 순서 = 본문 배치 순서 (파일명 기준으로 한 번 더 정렬)
+        const files = Array.from(photoInput.files || []).sort((a, b) =>
+          a.name.localeCompare(b.name, 'ko', { numeric: true }),
+        );
         if (files.length === 0) return;
         const slug = slugInput.value || generateSlug(topicInput.value || 'untitled');
         if (!slugInput.value) slugInput.value = slug;
 
-        uploadProgress.hidden = false;
-        for (let i = 0; i < files.length; i++) {
-          const file = files[i];
-          const idx = state.photos.length + 1;
-          uploadProgress.textContent = `업로드 중 ${i + 1}/${files.length}: ${file.name}`;
+        const offset = state.photos.length;
+        const slots: (UploadedPhoto | null)[] = new Array(files.length).fill(null);
+        let finished = 0;
+        let failed = 0;
 
+        uploadProgress.hidden = false;
+        uploadProgress.textContent = `업로드 중 0/${files.length}`;
+
+        async function uploadOne(file: File, i: number) {
+          const idx = offset + i + 1;
           const fd = new FormData();
           fd.append('file', file);
           fd.append('slug', slug);
           fd.append('index', String(idx).padStart(2, '0'));
           fd.append('noTone', String(noToneCb.checked));
-
           try {
             const res = await fetch('/srv/admin/upload-image', { method: 'POST', body: fd });
             const json = await res.json();
             if (!res.ok) throw new Error(json.error || 'upload failed');
-            state.photos.push({ url: json.url, index: idx });
-            renderPhotos();
+            slots[i] = { url: json.url, index: idx };
           } catch (err) {
-            uploadProgress.textContent = `❌ ${file.name}: ${err instanceof Error ? err.message : err}`;
-            await new Promise((r) => setTimeout(r, 2000));
+            failed++;
+            console.error('[upload]', file.name, err);
+          } finally {
+            finished++;
+            uploadProgress.textContent =
+              `업로드 중 ${finished}/${files.length}` + (failed ? ` (실패 ${failed})` : '');
           }
         }
-        uploadProgress.hidden = true;
+
+        // 동시 실행 수를 제한하되, 결과는 원래 순서대로 슬롯에 채운다
+        let cursor = 0;
+        await Promise.all(
+          Array.from({ length: Math.min(UPLOAD_CONCURRENCY, files.length) }, async () => {
+            while (cursor < files.length) {
+              const i = cursor++;
+              await uploadOne(files[i], i);
+            }
+          }),
+        );
+
+        state.photos.push(...(slots.filter(Boolean) as UploadedPhoto[]));
+        renumber();
+        renderPhotos();
+
+        if (failed) {
+          uploadProgress.textContent = `⚠️ ${failed}장 실패 — 실패한 사진만 다시 선택해주세요`;
+        } else {
+          uploadProgress.hidden = true;
+        }
         photoInput.value = '';
         btnGenerate.disabled = state.photos.length === 0;
       });
 
+      /** 화면에 보이는 순서대로 번호를 다시 매긴다 (본문 배치 순서 = 이 순서) */
+      function renumber() {
+        state.photos.forEach((p, i) => { p.index = i + 1; });
+      }
+
+      function move(from: number, to: number) {
+        if (to < 0 || to >= state.photos.length) return;
+        const [item] = state.photos.splice(from, 1);
+        state.photos.splice(to, 0, item);
+        renumber();
+        renderPhotos();
+      }
+
       function renderPhotos() {
         photoGrid.innerHTML = '';
-        for (const p of state.photos) {
+        state.photos.forEach((p, i) => {
           const wrap = document.createElement('div');
           wrap.className = 'photo';
+          wrap.draggable = true;
+          wrap.dataset.idx = String(i);
+
           const img = document.createElement('img');
           img.src = p.url;
           img.loading = 'lazy';
           img.alt = `사진 ${p.index}`;
           wrap.appendChild(img);
+
+          const num = document.createElement('span');
+          num.className = 'photo-num';
+          num.textContent = String(p.index);
+          wrap.appendChild(num);
+
           const del = document.createElement('button');
           del.textContent = '×';
           del.className = 'photo-del';
           del.title = '제거';
           del.onclick = () => {
-            state.photos = state.photos.filter((x) => x !== p);
+            state.photos.splice(i, 1);
+            renumber();
             renderPhotos();
             btnGenerate.disabled = state.photos.length === 0;
           };
           wrap.appendChild(del);
+
+          const nav = document.createElement('div');
+          nav.className = 'photo-nav';
+          const left = document.createElement('button');
+          left.textContent = '‹';
+          left.title = '앞으로';
+          left.onclick = () => move(i, i - 1);
+          const right = document.createElement('button');
+          right.textContent = '›';
+          right.title = '뒤로';
+          right.onclick = () => move(i, i + 1);
+          nav.append(left, right);
+          wrap.appendChild(nav);
+
+          // 드래그로 순서 변경 (PC)
+          wrap.addEventListener('dragstart', (e) => {
+            e.dataTransfer?.setData('text/plain', String(i));
+          });
+          wrap.addEventListener('dragover', (e) => e.preventDefault());
+          wrap.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const from = Number(e.dataTransfer?.getData('text/plain'));
+            if (Number.isInteger(from)) move(from, i);
+          });
+
           photoGrid.appendChild(wrap);
-        }
+        });
       }
 
       // ─── Generate ───────────────────────────
@@ -437,6 +519,58 @@ export const prerender = false;
 
       btnLint.addEventListener('click', runLint);
 
+      // ─── 미리보기 (마크다운 → 간이 렌더) ────
+      const btnPreview = $<HTMLButtonElement>('btn-preview');
+      const previewEl = $('preview');
+
+      function escapeHtml(s: string): string {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+
+      function renderMarkdown(md: string): string {
+        const body = md.replace(/^---[\s\S]*?---\s*/m, '');
+        return body
+          .split(/\n{2,}/)
+          .map((chunk) => {
+            const t = chunk.trim();
+            if (!t) return '';
+            if (/^<!--\s*video/i.test(t)) {
+              return `<p class="pv-video">🎬 영상/클립 삽입 위치</p>`;
+            }
+            const img = t.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+            if (img) {
+              return `<figure><img src="${img[2]}" alt="${escapeHtml(img[1])}" /><figcaption>${escapeHtml(img[1])}</figcaption></figure>`;
+            }
+            const heading = t.match(/^(#{2,6})\s+(.*)$/);
+            if (heading) return `<h3>${escapeHtml(heading[2])}</h3>`;
+            if (/^>/.test(t)) {
+              const inner = t.replace(/^>\s?/gm, '');
+              return `<blockquote>${inline(inner)}</blockquote>`;
+            }
+            return `<p>${inline(t)}</p>`;
+          })
+          .join('');
+      }
+
+      function inline(s: string): string {
+        return escapeHtml(s)
+          .replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, '<img src="$2" alt="$1" />')
+          .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\n/g, '<br />');
+      }
+
+      btnPreview.addEventListener('click', () => {
+        if (!previewEl.hidden) {
+          previewEl.hidden = true;
+          btnPreview.textContent = '👁 미리보기';
+          return;
+        }
+        previewEl.innerHTML = renderMarkdown(state.markdown || markdownEl.value);
+        previewEl.hidden = false;
+        btnPreview.textContent = '✕ 미리보기 닫기';
+      });
+
       // ─── Publish ────────────────────────────
       btnPublish.addEventListener('click', async () => {
         const slug = slugInput.value || generateSlug(topicInput.value || 'untitled');
@@ -479,46 +613,6 @@ export const prerender = false;
         location.href = '/admin/login';
       });
 
-      // ─── 🧪 테스트 데이터 자동 입력 (임시) ───
-      const btnTestFill = $<HTMLButtonElement>('btn-test-fill');
-      btnTestFill.addEventListener('click', () => {
-        const base = 'https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776998';
-        const dir = '/blog/2026/04/2026-04-24-%ED%95%98%EB%B2%A0%EB%B8%8C%EB%A6%AD%EC%8A%A4-%EC%95%84%EA%B8%B0%EC%B2%B4%EC%9C%A1%EA%B4%80-%EB%B0%94%EB%9E%8C%EA%B0%9C%EB%B9%84-%EC%A7%81%EC%A0%91%EA%B5%AC%EB%A7%A4-%EB%A6%AC%EB%B7%B0';
-        // 토큰 절약 위해 5장만 사용 (전체는 21장)
-        const photos = [
-          `${base}458${dir}/photo_01.jpg`,
-          `${base}459${dir}/photo_02.jpg`,
-          `${base}460${dir}/photo_04.jpg`,
-          `${base}464${dir}/photo_09.jpg`,
-          `${base}471${dir}/photo_19.jpg`,
-        ];
-        state.photos = photos.map((url, i) => ({ url, index: i + 1 }));
-        renderPhotos();
-
-        topicInput.value = '테스트: 하베브릭스 아기체육관 자동 생성';
-        slugInput.value = `test-${new Date().toISOString().slice(0, 10)}-harbebricks-auto`;
-        ($('category') as HTMLSelectElement).value = 'baby-products';
-        ($('purchase-type') as HTMLSelectElement).value = 'self-purchased';
-        ($('intent') as HTMLSelectElement).value = 'review';
-        ($('target') as HTMLSelectElement).value = 'search';
-        ($('main-keyword') as HTMLInputElement).value = '하베브릭스 아기체육관';
-        ($('sub-keywords') as HTMLTextAreaElement).value = '바람개비아기체육관\n신생아장난감\n감각발달';
-        ($('notes') as HTMLTextAreaElement).value = [
-          '- 봄이가 2개월 됐을 때 하루 종일 안고 있어야 했음',
-          '- 산후도우미 이모님 추천으로 알게 됨',
-          '- 처음엔 누워서 발로 차다가 점점 손으로 잡고 놀기 시작',
-          '- 모빌이 바람개비 모양이라 봄이가 신기해함',
-          '- 매트는 살짝 미끄러워서 러그 위에 깔아서 사용',
-          '- 한 달 정도 사용했는데 만족도 매우 높음',
-          '- 단점: 부피가 커서 보관이 살짝 불편',
-        ].join('\n');
-        ($('product-url') as HTMLInputElement).value = '';
-        ($('sponsor') as HTMLInputElement).value = '';
-        ($('client-guide') as HTMLTextAreaElement).value = '';
-
-        btnGenerate.disabled = false;
-        alert('테스트 데이터 입력 완료!\n사진 5장(Cloudinary 재활용) + 메타 정보가 채워졌습니다.\n\n"🤖 AI로 초안 생성" 버튼을 눌러 ANTHROPIC_API_KEY 동작을 확인하세요.\n\n⚠️ 발행 단계는 GITHUB_REPO_TOKEN 필요. 발행 안 하시려면 4단계에서 멈추세요.');
-      });
     </script>
 
     <style>
@@ -695,6 +789,82 @@ export const prerender = false;
         justify-content: center;
       }
       .photo-del:hover { background: rgba(0, 0, 0, 0.85); }
+      .photo-num {
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 5px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.6);
+        color: #fff;
+        font-size: 0.7rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .photo-nav {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: space-between;
+        background: rgba(0, 0, 0, 0.45);
+      }
+      .photo-nav button {
+        flex: 1;
+        border: none;
+        background: none;
+        color: #fff;
+        font-size: 1rem;
+        line-height: 1.4;
+        cursor: pointer;
+        padding: 0.1rem 0;
+      }
+      .photo-nav button:active { background: rgba(255, 255, 255, 0.2); }
+      .btn-row {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.6rem;
+        flex-wrap: wrap;
+      }
+      .preview {
+        margin-top: 0.8rem;
+        padding: 1rem 1.1rem;
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        background: #fff;
+        line-height: 1.85;
+        max-height: 70vh;
+        overflow-y: auto;
+      }
+      .preview h3 { font-size: 1.05rem; margin: 1.4rem 0 0.6rem; }
+      .preview p { margin: 0 0 0.9rem; }
+      .preview img { max-width: 100%; border-radius: 8px; display: block; }
+      .preview figure { margin: 0 0 0.9rem; }
+      .preview figcaption {
+        font-size: 0.75rem;
+        color: var(--color-text-light);
+        margin-top: 0.25rem;
+      }
+      .preview blockquote {
+        margin: 0 0 0.9rem;
+        padding: 0.6rem 0.9rem;
+        border-left: 3px solid var(--color-accent);
+        background: var(--color-accent-light);
+        border-radius: 0 8px 8px 0;
+      }
+      .preview .pv-video {
+        padding: 0.5rem 0.8rem;
+        background: #eef0ff;
+        border: 1px dashed #9aa6f0;
+        border-radius: 8px;
+        color: #4453c7;
+        font-weight: 700;
+      }
       .status {
         margin-top: 0.6rem;
         padding: 0.6rem 0.8rem;
