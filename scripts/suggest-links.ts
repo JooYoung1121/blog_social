@@ -52,9 +52,14 @@ async function main() {
       const content = await fs.readFile(file, 'utf-8');
       const fm = parseFrontmatter(content);
       const body = content.replace(/^---[\s\S]*?---\s*/m, '');
+      // slug = src/content/posts 기준 상대경로 (중첩 폴더 글의 URL과 일치해야 함)
+      const rel = path
+        .relative(path.resolve('src/content/posts'), file)
+        .replace(/\\/g, '/')
+        .replace(/\.md$/, '');
       const meta: PostMeta = {
-        slug: path.basename(file, '.md'),
-        title: fm.title || path.basename(file, '.md'),
+        slug: rel,
+        title: fm.title || rel,
         category: fm.category || '',
         tags: parseTags(fm.tags),
         mainKeyword: fm.mainKeyword,
