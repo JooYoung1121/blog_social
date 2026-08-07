@@ -792,12 +792,38 @@ export function lintPostBody(
   }
 
   // 6. 소제목 개수
-  const subheadings = bodyOnly.match(/^##\s+.+$/gm) || [];
-  const blockquotes = bodyOnly.match(/^>\s+.+$/gm) || [];
-  const totalSubheadings = subheadings.length + blockquotes.length;
-  const subheadingTexts = [...subheadings, ...blockquotes].map((heading) =>
-    heading.replace(/^(##|>)\s*/, '').trim(),
-  );
+  //    인용블록은 "연속된 > 줄 = 하나"로 묶어서 센다. (줄 단위로 세면
+  //    TL;DR 박스나 FAQ Q&A가 소제목 수십 개로 잡힘)
+  //    TL;DR / FAQ 블록 자체는 소제목이 아니므로 제외.
+  const subheadingTexts: string[] = [];
+  let quoteBuf: string[] = [];
+
+  const pushQuote = () => {
+    if (quoteBuf.length === 0) return;
+    const text = quoteBuf.join(' ').trim();
+    quoteBuf = [];
+    const isAiFriendlyBlock =
+      /한\s*줄\s*요약/.test(text) || /^\*{0,2}Q[.．]/.test(text);
+    if (text && !isAiFriendlyBlock) subheadingTexts.push(text);
+  };
+
+  for (const line of bodyOnly.split('\n')) {
+    const quote = line.match(/^>\s?(.*)$/);
+    if (quote) {
+      quoteBuf.push(quote[1]);
+      continue;
+    }
+    pushQuote();
+    const heading = line.match(/^##\s+(.+)$/);
+    if (heading) subheadingTexts.push(heading[1].trim());
+  }
+  pushQuote();
+
+  // FAQ 섹션 H2는 명사형 금지 룰의 예외이자 소제목 카운트에서도 제외
+  const faqHeadingIdx = subheadingTexts.findIndex((h) => /자주\s*묻는\s*질문/.test(h));
+  if (faqHeadingIdx >= 0) subheadingTexts.splice(faqHeadingIdx, 1);
+
+  const totalSubheadings = subheadingTexts.length;
   if (
     totalSubheadings < STRUCTURE_RULES.subheadings.min ||
     totalSubheadings > STRUCTURE_RULES.subheadings.max
@@ -826,12 +852,17 @@ export function lintPostBody(
   }
 
   // 8. 명사형 소제목 검출
-  for (const bad of SUBHEADING_PATTERNS.bad_examples) {
-    if (bodyOnly.includes(bad)) {
+  //    부분일치로 보면 "## 성분 꼼꼼히 따져봤어요" 같은 정상 소제목까지 걸리므로
+  //    소제목 전체가 명사형과 정확히 같을 때만 에러.
+  const badHeadings = new Set(
+    SUBHEADING_PATTERNS.bad_examples.map((b) => b.replace(/^##\s*/, '').trim()),
+  );
+  for (const heading of subheadingTexts) {
+    if (badHeadings.has(heading)) {
       issues.push({
         level: 'error',
         code: 'noun-subheading',
-        message: `명사형 소제목 발견: "${bad}" — 서술형/감정형으로 변경`,
+        message: `명사형 소제목 발견: "${heading}" — 서술형/감정형으로 변경`,
       });
     }
   }
