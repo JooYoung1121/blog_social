@@ -303,6 +303,71 @@ export const AUTHORITY_SIGNALS = {
 } as const;
 
 // ──────────────────────────────────────────────
+// 2026 하반기 네이버 변화 대응 (AI 브리핑 인용 / 메이트 / 클립)
+//
+// 타임라인 (확인된 사실):
+//   - 2026-04-30 연관검색어 서비스 종료 (20년 만에 폐지)
+//   - 2026-04    AI 브리핑 이용자 3,000만 돌파, 전체 검색 쿼리 약 20% 처리
+//   - 2026-06-04 "네이버 메이트" 베타 시작 — 선정 핵심 지표가 **AI 브리핑 인용수**
+//                (인용수는 2026-01부터 누적 집계, 크리에이터 어드바이저에서 확인)
+//   - 2026-06-26 AI탭(대화형 검색) 출시 — 쇼핑·플레이스·예약까지 한 흐름으로 연결
+//   출처:
+//     - 코드잇 "2026년 확 바뀐 네이버 알고리즘"
+//       https://sprint.codeit.kr/blog/naver-blog-algorithm-change-ai-briefing-clip-mate
+//     - SEO NEWS "네이버, AI 브리핑 인용 창작자에 최대 1천만 원 지원"
+//       https://seonews.co.kr/naver-mate-ai-briefing-citation/
+//
+// 운영 판단(추론): 목표 지표가 "검색 상위노출/클릭률" 단독에서
+// "홈피드 노출 + AI 인용 + 체류시간"으로 넓어졌다. 인용되려면 AI가 잘라 쓰기 좋은
+// **질문 → 자기완결 답변** 덩어리가 본문에 있어야 한다.
+// ──────────────────────────────────────────────
+export const AI_BRIEFING_RULES = {
+  /** 소제목(질문) 바로 아래 첫 문단은 그 질문의 답을 그 문단만 읽어도 알 수 있게 쓴다 */
+  self_contained_answer: {
+    enabled: true,
+    sentences: { min: 2, max: 3 },
+    note:
+      '대명사("이건", "그게")로 시작하지 말고 주어(제품명/상황)를 문단 안에 한 번 더 명시 — RAG 청크 단위로 잘려도 의미가 유지되도록',
+  },
+  /** 최신성 신호 — AI는 "언제 기준 정보인지"가 명시된 문서를 선호 */
+  recency_signal: {
+    recommended: true,
+    examples: ['"2026년 8월 기준으로는~"', '"○주 정도 써본 시점 기준"'],
+  },
+  /** 인용 측정 지표 (수동 확인) */
+  metrics: [
+    '크리에이터 어드바이저 → AI 브리핑 인용수 (2026-01부터 누적)',
+    '메인 키워드 검색 시 AI 브리핑 출처 카드에 내 글이 뜨는지',
+    'AI탭에서 같은 질문 시 인용 여부',
+  ],
+} as const;
+
+/**
+ * 클립(숏폼) 연계 — 2026 블로그 글에 클립을 직접 삽입할 수 있고,
+ * 영상 포함 문서에 검색·홈피드 가점이 보고됨(업계 분석, 공식 수치 아님).
+ * 우리 파이프라인은 MP4를 임베드하지 않으므로 "마커"만 남기고 네이버에서 직접 삽입한다.
+ */
+export const CLIP_RULES = {
+  recommended_per_post: { min: 1, max: 2 },
+  marker: PHOTO_RULES.video_marker,
+  note:
+    '제품 사용 시연·아이 반응처럼 움직임이 정보가 되는 지점에 마커. 네이버 업로드 시 클립 또는 동영상으로 삽입',
+} as const;
+
+/**
+ * 발행 리듬 — AI 대량생산 저품질 글에 대한 제재가 강화되는 흐름.
+ * (뉴스버스 탐사보도: 하루 100건 자동 발행 블로그 → 네이버 제재 강화 방침
+ *  https://www.newsverse.kr/news/articleView.html?idxno=9959)
+ * 우리는 소량·고품질이므로 문제 없지만, 자동화를 붙일 때 이 상한을 넘기지 않는다.
+ */
+export const PUBLISHING_RHYTHM = {
+  per_day_max: 2,
+  per_week_recommended: { min: 2, max: 4 },
+  min_interval_minutes: 60,
+  note: '같은 키워드/구조의 글을 연속 발행하지 않기 — 유사문서 판정 위험',
+} as const;
+
+// ──────────────────────────────────────────────
 // 발행 룰
 // ──────────────────────────────────────────────
 export const PUBLISHING_RULES = {
@@ -476,7 +541,7 @@ export function buildSystemPrompt(opts: PromptOptions): string {
     `- 사진 ${PHOTO_RULES.consecutive_max}장까지만 연속 (3장 이상 금지)`,
     `- 사진 뒤에 반드시 텍스트 1~${STRUCTURE_RULES.paragraph_max_lines}줄`,
     '- 제공된 사진은 영상(MP4) 제외 전부 사용, 원본 순서 유지',
-    `- 영상이 어울리는 핵심 장면(반응/사용 시연 등)이 있으면 그 위치에 영상 삽입 마커 \`${PHOTO_RULES.video_marker}\`를 1개 정도 남김 (MP4는 임베드하지 않음 — 네이버 업로드 시 직접 삽입, 영상 포함 글에 검색 가점)`,
+    `- 영상이 어울리는 핵심 장면(반응/사용 시연 등)에 영상 삽입 마커 \`${PHOTO_RULES.video_marker}\`를 ${CLIP_RULES.recommended_per_post.min}~${CLIP_RULES.recommended_per_post.max}개 남김 (MP4는 임베드하지 않음 — 네이버 업로드 시 클립/동영상으로 직접 삽입, 영상 포함 글에 가점)`,
     '',
     '# 소제목',
     '- 인용블록(>) 또는 H2 사용',
@@ -508,6 +573,17 @@ export function buildSystemPrompt(opts: PromptOptions): string {
     ...AUTHORITY_SIGNALS.experience_signals.map((s) => `  - ${s}`),
     '- 단, 가격/수량/사이즈는 본문 금지 — 금액 대신 날짜·기간·과정·반응으로 신뢰도를 만든다',
     `- 신뢰 가능한 외부 공식 출처 링크 ${AUTHORITY_SIGNALS.external_sources.recommended.min}~${AUTHORITY_SIGNALS.external_sources.recommended.max}개를 자연스럽게 (${AUTHORITY_SIGNALS.external_sources.note})`,
+    '',
+    // 2026 하반기: AI 브리핑 인용수가 노출·보상(네이버 메이트)의 핵심 지표가 됨
+    target !== 'homefeed'
+      ? [
+          '# AI 브리핑 인용 최적화 (2026 하반기 — 가장 중요)',
+          `- 소제목(질문) 바로 다음 문단은 그 질문의 답만 읽어도 이해되게 ${AI_BRIEFING_RULES.self_contained_answer.sentences.min}~${AI_BRIEFING_RULES.self_contained_answer.sentences.max}문장으로 먼저 결론을 준다`,
+          `- ${AI_BRIEFING_RULES.self_contained_answer.note}`,
+          `- 최신성 신호를 1회 정도 자연스럽게: ${AI_BRIEFING_RULES.recency_signal.examples.join(' / ')}`,
+          '- 일반론 요약(어디서나 볼 수 있는 설명)은 넣지 않는다. AI가 못 만드는 건 "직접 겪은 것"뿐',
+        ].join('\n')
+      : '',
     '',
     `# 타겟: ${target}`,
     `- ${targetRules.style}`,
@@ -758,6 +834,64 @@ export function lintPostBody(
         message: `명사형 소제목 발견: "${bad}" — 서술형/감정형으로 변경`,
       });
     }
+  }
+
+  // ── 9~12. 2026 하반기 룰 (AI 브리핑 인용 / 클립 / 링크)
+  // homefeed 타깃은 감성 흐름 우선이라 검사에서 제외
+  if (target !== 'homefeed') {
+    // 9. TL;DR 박스 (인사말 직후 한 줄 요약)
+    if (!/한\s*줄\s*요약/.test(bodyOnly)) {
+      issues.push({
+        level: 'warning',
+        code: 'no-tldr',
+        message:
+          'TL;DR(한 줄 요약) 블록이 없음 — AI 브리핑 인용 확률을 높이려면 인사말 직후 권장',
+      });
+    }
+
+    // 10. FAQ 섹션
+    if (!/자주\s*묻는\s*질문/.test(bodyOnly)) {
+      issues.push({
+        level: 'warning',
+        code: 'no-faq',
+        message:
+          'FAQ 섹션이 없음 — 질문/답변 덩어리가 AI 인용에 가장 잘 잡힘 (마무리 인사 직전 권장)',
+      });
+    }
+
+    // 11. 영상/클립 마커
+    const videoMarkers = bodyOnly.match(/<!--\s*video:/gi) || [];
+    if (videoMarkers.length < CLIP_RULES.recommended_per_post.min) {
+      issues.push({
+        level: 'warning',
+        code: 'no-video-marker',
+        message: `영상(클립) 삽입 마커가 ${videoMarkers.length}개 — ${CLIP_RULES.recommended_per_post.min}~${CLIP_RULES.recommended_per_post.max}개 권장 (영상 포함 문서 가점)`,
+      });
+    }
+  }
+
+  // 12. 링크 — 내부(2~3개) / 외부 공식 출처(1~2개)
+  const links = [...bodyOnly.matchAll(/\[[^\]]+\]\((https?:\/\/[^)\s]+|\/[^)\s]+)\)/g)]
+    .map((m) => m[1]);
+  const internalLinks = links.filter(
+    (href) => href.startsWith('/') || href.includes('jinas-holiday'),
+  );
+  const externalLinks = links.filter((href) => !internalLinks.includes(href));
+
+  if (internalLinks.length < STRUCTURE_RULES.internal_links.min) {
+    issues.push({
+      level: 'warning',
+      code: 'internal-links-low',
+      message: `내부 링크 ${internalLinks.length}개 — 권장 ${STRUCTURE_RULES.internal_links.min}~${STRUCTURE_RULES.internal_links.max}개`,
+    });
+  }
+  if (externalLinks.length < AUTHORITY_SIGNALS.external_sources.recommended.min) {
+    issues.push({
+      level: 'warning',
+      code: 'external-source-missing',
+      message:
+        '외부 공식 출처 링크가 없음 — 신뢰도(공식성) 신호로 1~2개 권장 (브랜드 공식몰/공식 정보 페이지)',
+    });
   }
 
   return issues;

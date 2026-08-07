@@ -1,27 +1,25 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
+import {
+  commitFile,
+  findPostPath,
+  newPostPath,
+  readFile,
+  stampUpdated,
+} from '../../../lib/github';
 
 interface PublishBody {
   slug: string;
   markdown: string;
-}
-
-function parseRepoFromGitConfig(): { owner: string; repo: string } {
-  // 환경변수 우선
-  const repo = process.env.GITHUB_REPO; // "owner/repo" 형식
-  if (repo && repo.includes('/')) {
-    const [owner, name] = repo.split('/');
-    return { owner, repo: name };
-  }
-  // 기본값 (이 프로젝트)
-  return { owner: 'JooYoung1121', repo: 'blog_social' };
+  /** 수정 발행 시 불러온 파일의 sha (동시 수정 충돌 방지) */
+  sha?: string;
 }
 
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body: PublishBody = await request.json();
-    const { slug, markdown } = body;
+    const { slug, markdown, sha } = body;
     if (!slug || !markdown) {
       return new Response(JSON.stringify({ error: 'slug, markdown 필수' }), {
         status: 400,
@@ -29,76 +27,45 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    const token = process.env.GITHUB_REPO_TOKEN;
-    if (!token) {
+    // 1) 기존 글이면 "원래 저장된 경로"에 그대로 덮어쓴다.
+    //    (지금 연/월로 경로를 계산하면 과거 글 수정 시 중복 파일이 생김)
+    const existingPath = await findPostPath(slug);
+    const path = existingPath ?? newPostPath(slug);
+
+    // 2) 최신 sha 확인 — 클라이언트가 들고 있던 sha와 다르면 그 사이에 다른 곳에서 수정된 것
+    const current = existingPath ? await readFile(existingPath) : null;
+    if (current && sha && current.sha !== sha) {
       return new Response(
-        JSON.stringify({ error: 'GITHUB_REPO_TOKEN 환경변수 필요' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } },
+        JSON.stringify({
+          error:
+            '이 글이 다른 곳에서 먼저 수정됐어요. 다시 불러온 뒤 수정해주세요.',
+          code: 'conflict',
+        }),
+        { status: 409, headers: { 'Content-Type': 'application/json' } },
       );
     }
 
-    const { owner, repo } = parseRepoFromGitConfig();
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const filePath = `src/content/posts/${year}/${month}/${slug}.md`;
+    // 3) 수정이면 updated 날짜 스탬프 (신선도 신호)
+    const today = new Date().toISOString().slice(0, 10);
+    const finalMarkdown = current
+      ? stampUpdated(markdown, today)
+      : markdown;
 
-    // 1) 기존 파일 존재 여부 확인 (sha 필요 시)
-    const headRes = await fetch(
-      `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(filePath)}?ref=main`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/vnd.github+json',
-          'User-Agent': 'jinas-holiday-admin',
-        },
-      },
+    const message = current ? `update: ${slug}` : `feat: 새 글 — ${slug}`;
+    const result = await commitFile(
+      path,
+      finalMarkdown,
+      message,
+      current?.sha,
     );
-    let existingSha: string | undefined;
-    if (headRes.ok) {
-      const json = (await headRes.json()) as { sha: string };
-      existingSha = json.sha;
-    } else if (headRes.status !== 404) {
-      const errText = await headRes.text();
-      throw new Error(`GitHub get failed: ${headRes.status} ${errText}`);
-    }
-
-    // 2) 커밋 생성
-    const contentBase64 = Buffer.from(markdown, 'utf-8').toString('base64');
-    const message = existingSha ? `update: ${slug}` : `feat: 새 글 — ${slug}`;
-    const putRes = await fetch(
-      `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(filePath)}`,
-      {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/vnd.github+json',
-          'Content-Type': 'application/json',
-          'User-Agent': 'jinas-holiday-admin',
-        },
-        body: JSON.stringify({
-          message,
-          content: contentBase64,
-          branch: 'main',
-          sha: existingSha,
-        }),
-      },
-    );
-    if (!putRes.ok) {
-      const errText = await putRes.text();
-      throw new Error(`GitHub put failed: ${putRes.status} ${errText}`);
-    }
-    const putJson = (await putRes.json()) as {
-      commit: { html_url: string; sha: string };
-      content: { html_url: string };
-    };
 
     return new Response(
       JSON.stringify({
         ok: true,
-        commitUrl: putJson.commit.html_url,
-        fileUrl: putJson.content.html_url,
-        path: filePath,
+        ...result,
+        naverUrl: `/naver/${path
+          .replace(/^src\/content\/posts\//, '')
+          .replace(/\.md$/, '')}`,
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
     );

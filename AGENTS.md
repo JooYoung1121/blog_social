@@ -51,7 +51,9 @@ Codex 결과물 비교 시에는 [`docs/codex-workflow.md`](docs/codex-workflow.
 ## 폴더 구조
 - `src/content/posts/YYYY/MM/` — Markdown 포스트 (날짜별 정리)
 - `src/pages/posts/[...slug].astro` — 웹 블로그 글 페이지
-- `src/pages/naver/[...slug].astro` — **네이버 업로드 모드** (블록 단위 복사 버튼 + 사진/영상 삽입 마커, 모바일 친화). 모든 발행 글에 자동 생성됨
+- `src/pages/naver/[...slug].astro` — **네이버 업로드 모드**. 모든 발행 글에 자동 생성. 블록 단위 복사(진행 상태 localStorage 저장), 소제목/인용 네이버 서식 배지, 사진 카드(그 자리에서 열기/저장), 영상·클립 삽입 위치, 문단별 링크 URL 노출, 발행 전 체크리스트
+- `src/pages/srv/admin/*` — admin API. `posts`(글 목록/원문 불러오기) · `lint`(발행 전 룰 검사) · `generate`(AI 초안) · `publish`(원래 경로에 커밋, 수정 시 `updated` 자동 스탬프)
+- `src/lib/github.ts` — GitHub Contents/Trees 헬퍼. **글 경로는 항상 slug로 트리에서 찾는다** (연/월로 재계산하면 과거 글 수정 시 중복 파일 발생)
 - `scripts/` — CLI 도구 (new-post, upload-images, generate-naver)
 
 ## 환경변수 (.env)
@@ -73,7 +75,8 @@ CLOUDINARY_API_SECRET=xxx
 - 톤: 친근한 대화체, 본인 경험 기반, 이모지 적절히. 1~2줄 짧은 문단 → 빈 줄 → 1~2줄.
 - 소제목: **서술형/감정형 문장**. 명사형(`성분`, `디자인`, `결론`) 금지.
 - 사진 배치: **연속 최대 2장**, 사진 뒤에 반드시 텍스트.
-- SEO: 본문 1,500~2,000자, 메인 키워드 5~7회, 소제목 4~6개, 내부 링크 2~3개.
+- SEO: 본문 1,500~2,000자(카테고리 차등은 `BODY_CHARS_BY_CATEGORY`), 메인 키워드 5~7회, 소제목 4~6개, 내부 링크 2~3개.
+- **2026 하반기 (AI 브리핑 인용 최적화 — 가장 중요):** 소제목 바로 다음 문단은 그 질문의 답만 읽어도 이해되게 2~3문장 결론부터. 최신성 신호 1회. 클립/영상 마커 1~2개. 발행은 하루 최대 2편·주 2~4편. 자세한 내용은 `docs/blog-writing-guide.md` §7 "2026 하반기 업데이트".
 - 자세한 톤·구조·예시는 [`docs/blog-writing-guide.md`](docs/blog-writing-guide.md) 참고.
 
 ### 절대 금지

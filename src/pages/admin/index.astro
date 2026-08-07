@@ -24,6 +24,26 @@ export const prerender = false;
     </header>
 
     <main>
+      <!-- Step 0: 기존 글 수정 -->
+      <section class="step">
+        <h2>0. 기존 글 수정 (선택)</h2>
+        <p class="hint">
+          발행된 글을 불러와 고칠 수 있어요. 저장 위치는 원래 경로 그대로 유지되고,
+          frontmatter의 <code>updated</code> 날짜가 자동으로 갱신됩니다.
+        </p>
+        <div class="grid-2">
+          <label>발행된 글
+            <select id="post-select">
+              <option value="">— 새 글 작성 —</option>
+            </select>
+          </label>
+          <label>&nbsp;
+            <button id="btn-load" class="btn-ghost" type="button" style="margin-top:0.4rem;">📥 불러오기</button>
+          </label>
+        </div>
+        <p id="load-status" class="status" hidden></p>
+      </section>
+
       <!-- Step 1: 사진 업로드 -->
       <section class="step">
         <h2>1. 사진 업로드</h2>
@@ -124,6 +144,8 @@ export const prerender = false;
       <section class="step">
         <h2>4. 미리보기 & 수정</h2>
         <textarea id="markdown" rows="24" placeholder="AI가 생성한 마크다운이 여기 표시됩니다. 수정 가능."></textarea>
+        <button id="btn-lint" class="btn-ghost" type="button" style="margin-top:0.6rem;">🔍 룰 검사 (lint)</button>
+        <div id="lint-result" class="lint" hidden></div>
       </section>
 
       <!-- Step 5: 발행 -->
@@ -138,9 +160,17 @@ export const prerender = false;
     <script>
       // ─── State ──────────────────────────────
       interface UploadedPhoto { url: string; index: number }
-      const state: { photos: UploadedPhoto[]; markdown: string } = {
+      const state: {
+        photos: UploadedPhoto[];
+        markdown: string;
+        /** 수정 모드일 때 불러온 파일의 sha (동시 수정 충돌 감지용) */
+        sha: string | null;
+        mode: 'new' | 'edit';
+      } = {
         photos: [],
         markdown: '',
+        sha: null,
+        mode: 'new',
       };
 
       // ─── DOM ────────────────────────────────
@@ -276,6 +306,7 @@ export const prerender = false;
           genStatus.className = 'status success';
           genStatus.textContent = `✅ 생성 완료. 토큰: 입력 ${totalIn.toLocaleString()} (캐시 읽기 ${u.cache_read.toLocaleString()}) / 출력 ${u.output.toLocaleString()}`;
           btnPublish.disabled = false;
+          await runLint();
         } catch (err) {
           genStatus.className = 'status error';
           genStatus.textContent = `❌ ${err instanceof Error ? err.message : err}`;
@@ -290,10 +321,130 @@ export const prerender = false;
         btnPublish.disabled = !state.markdown.trim();
       });
 
+      // ─── 기존 글 불러오기 (수정 모드) ───────
+      const postSelect = $<HTMLSelectElement>('post-select');
+      const btnLoad = $<HTMLButtonElement>('btn-load');
+      const loadStatus = $('load-status');
+
+      function setMode(mode: 'new' | 'edit') {
+        state.mode = mode;
+        btnPublish.textContent =
+          mode === 'edit'
+            ? '📤 수정 발행 (기존 경로에 덮어쓰기)'
+            : '📤 발행 (main에 commit & push)';
+      }
+
+      (async () => {
+        try {
+          const res = await fetch('/srv/admin/posts');
+          const json = await res.json();
+          if (!res.ok) throw new Error(json.error || 'load failed');
+          for (const p of json.posts as { slug: string; path: string }[]) {
+            const opt = document.createElement('option');
+            opt.value = p.slug;
+            opt.textContent = p.slug;
+            opt.title = p.path;
+            postSelect.appendChild(opt);
+          }
+        } catch (err) {
+          loadStatus.hidden = false;
+          loadStatus.className = 'status error';
+          loadStatus.textContent = `글 목록을 못 불러왔어요: ${err instanceof Error ? err.message : err}`;
+        }
+      })();
+
+      btnLoad.addEventListener('click', async () => {
+        const slug = postSelect.value;
+        loadStatus.hidden = false;
+        loadStatus.className = 'status';
+
+        if (!slug) {
+          state.sha = null;
+          setMode('new');
+          loadStatus.textContent = '새 글 작성 모드로 돌아왔어요.';
+          return;
+        }
+
+        loadStatus.textContent = '📥 불러오는 중...';
+        try {
+          const res = await fetch(`/srv/admin/posts?slug=${encodeURIComponent(slug)}`);
+          const json = await res.json();
+          if (!res.ok) throw new Error(json.error || 'load failed');
+          state.markdown = json.markdown;
+          state.sha = json.sha;
+          markdownEl.value = json.markdown;
+          slugInput.value = slug;
+          slugInput.dataset.manual = '1';
+          setMode('edit');
+          btnPublish.disabled = false;
+          loadStatus.className = 'status success';
+          loadStatus.textContent = `✅ 불러왔어요 — ${json.path} (수정 후 5단계에서 발행)`;
+          await runLint();
+        } catch (err) {
+          loadStatus.className = 'status error';
+          loadStatus.textContent = `❌ ${err instanceof Error ? err.message : err}`;
+        }
+      });
+
+      // ─── 룰 검사 (lint) ─────────────────────
+      const btnLint = $<HTMLButtonElement>('btn-lint');
+      const lintResult = $('lint-result');
+
+      async function runLint() {
+        if (!state.markdown.trim()) return;
+        lintResult.hidden = false;
+        lintResult.className = 'lint';
+        lintResult.textContent = '🔍 검사 중...';
+        try {
+          const res = await fetch('/srv/admin/lint', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ markdown: state.markdown }),
+          });
+          const json = await res.json();
+          if (!res.ok) throw new Error(json.error || 'lint failed');
+
+          const issues = json.issues as { level: string; code: string; message: string }[];
+          const errors = issues.filter((i) => i.level === 'error');
+          const warnings = issues.filter((i) => i.level === 'warning');
+          const s = json.stats;
+
+          lintResult.innerHTML = '';
+          const summary = document.createElement('p');
+          summary.className = 'lint-summary';
+          summary.textContent =
+            `본문 ${s.charCount}자 · 사진 ${s.photoCount}장 · 영상 마커 ${s.videoMarkers}개 — ` +
+            `에러 ${errors.length} / 경고 ${warnings.length}`;
+          lintResult.appendChild(summary);
+
+          for (const i of [...errors, ...warnings]) {
+            const row = document.createElement('div');
+            row.className = `lint-item ${i.level}`;
+            row.textContent = `${i.level === 'error' ? '❌' : '⚠️'} [${i.code}] ${i.message}`;
+            lintResult.appendChild(row);
+          }
+          if (issues.length === 0) {
+            const ok = document.createElement('div');
+            ok.className = 'lint-item ok';
+            ok.textContent = '✅ 룰 위반 없음';
+            lintResult.appendChild(ok);
+          }
+        } catch (err) {
+          lintResult.className = 'lint error';
+          lintResult.textContent = `❌ ${err instanceof Error ? err.message : err}`;
+        }
+      }
+
+      btnLint.addEventListener('click', runLint);
+
       // ─── Publish ────────────────────────────
       btnPublish.addEventListener('click', async () => {
         const slug = slugInput.value || generateSlug(topicInput.value || 'untitled');
-        if (!confirm(`main 브랜치에 발행할까요?\n\n경로: src/content/posts/YYYY/MM/${slug}.md`)) return;
+        const confirmMsg =
+          state.mode === 'edit'
+            ? `기존 글을 수정 발행할까요?\n\nslug: ${slug}\n(원래 저장 경로에 덮어쓰고 updated 날짜가 갱신됩니다)`
+            : `main 브랜치에 발행할까요?\n\n경로: src/content/posts/YYYY/MM/${slug}.md`;
+        if (!confirm(confirmMsg)) return;
 
         btnPublish.disabled = true;
         publishStatus.hidden = false;
@@ -304,12 +455,17 @@ export const prerender = false;
           const res = await fetch('/srv/admin/publish', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ slug, markdown: state.markdown }),
+            body: JSON.stringify({ slug, markdown: state.markdown, sha: state.sha }),
           });
           const json = await res.json();
           if (!res.ok) throw new Error(json.error || 'publish failed');
+          state.sha = null;
           publishStatus.className = 'status success';
-          publishStatus.innerHTML = `✅ 발행 완료! <a href="${json.commitUrl}" target="_blank" rel="noopener">커밋 보기</a> · 1~2분 후 사이트에 반영됩니다.`;
+          publishStatus.innerHTML =
+            `✅ ${json.mode === 'update' ? '수정' : '발행'} 완료! ` +
+            `<a href="${json.commitUrl}" target="_blank" rel="noopener">커밋 보기</a> · ` +
+            `<a href="${json.naverUrl}" target="_blank" rel="noopener">네이버 업로드 모드 열기</a> · ` +
+            `1~2분 후 반영됩니다. (경로: ${json.path})`;
         } catch (err) {
           publishStatus.className = 'status error';
           publishStatus.textContent = `❌ ${err instanceof Error ? err.message : err}`;
@@ -558,6 +714,25 @@ export const prerender = false;
         color: inherit;
         text-decoration: underline;
       }
+      .lint {
+        margin-top: 0.8rem;
+        padding: 0.7rem 0.9rem;
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        background: #fff;
+        font-size: 0.85rem;
+      }
+      .lint-summary {
+        margin: 0 0 0.5rem;
+        font-weight: 700;
+      }
+      .lint-item {
+        padding: 0.25rem 0;
+        border-top: 1px solid #f2ece4;
+        line-height: 1.5;
+      }
+      .lint-item.error { color: var(--color-error); }
+      .lint-item.ok { color: var(--color-success); }
     </style>
   </body>
 </html>

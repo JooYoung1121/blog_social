@@ -22,64 +22,130 @@ const categoryLabels: Record<string, string> = {
 };
 
 // ──────────────────────────────────────────────
-// 본문(raw markdown)을 "네이버 업로드 블록"으로 분절.
-//  - 사진(![](...))과 영상 마커(<!-- video -->)를 경계로 텍스트를 끊는다.
-//  - 네이버 에디터 흐름(텍스트 → 사진 → 텍스트)에 맞춰 블록 단위로 복사.
-//  - 네이버는 마크다운/외부 이미지를 그대로 못 받으므로:
-//      · 텍스트는 마크다운 기호를 제거한 plain text로 제공
-//      · 사진은 input 원본에서 직접 업로드하도록 위치 마커만 표시
+// 본문(raw markdown)을 "네이버 스마트에디터 붙여넣기 단위"로 분절.
+//
+// 네이버 에디터는 마크다운도, 외부 이미지 URL도 그대로 못 받는다.
+// 그래서 이 페이지는:
+//   · 텍스트 → 마크다운 기호를 제거한 plain text 블록 + [복사]
+//   · 소제목/인용 → 어떤 네이버 서식을 지정해야 하는지 배지로 안내
+//   · 사진 → 그 자리에 실제 사진을 띄워서 [열기/저장]으로 바로 내려받게
+//   · 영상 → 클립/동영상 삽입 위치 안내 (2026 영상 가점)
+//   · 링크 → 본문에서 사라지지 않도록 블록 아래에 URL을 따로 노출
 // ──────────────────────────────────────────────
 type Block =
-  | { kind: 'text'; text: string }
-  | { kind: 'photo'; index: number; label: string; isThumb: boolean }
+  | { kind: 'text'; text: string; links: string[] }
+  | { kind: 'heading'; text: string; links: string[] }
+  | { kind: 'quote'; text: string; links: string[]; isTldr: boolean }
+  | { kind: 'photo'; index: number; label: string; url: string; alt: string; isThumb: boolean }
   | { kind: 'video'; note: string };
 
-const imgRe = /^\s*!\[[^\]]*\]\([^)]*\)\s*$/;
+const imgRe = /^\s*!\[([^\]]*)\]\(([^)]*)\)\s*$/;
 const videoRe = /^\s*<!--\s*video:?\s*(.*?)\s*-->\s*$/i;
+const headingRe = /^\s*#{2,6}\s+(.*)$/;
+const quoteRe = /^\s*>\s?(.*)$/;
 
 function mdToPlain(s: string): string {
   return s
-    .replace(/^#{1,6}\s+/gm, '') // 헤딩 기호 제거
-    .replace(/^>\s?/gm, '') // 인용블록 기호 제거
-    .replace(/\*\*(.+?)\*\*/g, '$1') // 굵게
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/^>\s?/gm, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
     .replace(/__(.+?)__/g, '$1')
-    .replace(/(?<!\*)\*(?!\*)([^*]+?)\*(?!\*)/g, '$1') // 기울임
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1') // 링크 → 텍스트
-    .replace(/`([^`]+)`/g, '$1') // 인라인 코드
-    .replace(/\n{3,}/g, '\n\n'); // 빈 줄 3개+ → 2개
+    .replace(/(?<!\*)\*(?!\*)([^*]+?)\*(?!\*)/g, '$1')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/\n{3,}/g, '\n\n');
+}
+
+function extractLinks(s: string): string[] {
+  const found = [...s.matchAll(/\[[^\]]+\]\((https?:\/\/[^)\s]+)\)/g)].map((m) => m[1]);
+  return [...new Set(found)];
+}
+
+/** Cloudinary 원본을 다운로드로 받게 하는 변형 (fl_attachment) */
+function toDownloadUrl(url: string): string {
+  if (!url.includes('res.cloudinary.com')) return url;
+  return url.replace('/upload/', '/upload/fl_attachment/');
 }
 
 const blocks: Block[] = [];
 let buf: string[] = [];
+let bufKind: 'text' | 'quote' = 'text';
 let photoCount = 0;
 
 function flush() {
-  const text = mdToPlain(buf.join('\n')).trim();
-  if (text) blocks.push({ kind: 'text', text });
+  const raw = buf.join('\n');
+  const text = mdToPlain(raw).trim();
   buf = [];
+  if (!text) return;
+  const links = extractLinks(raw);
+  if (bufKind === 'quote') {
+    blocks.push({
+      kind: 'quote',
+      text,
+      links,
+      isTldr: /한\s*줄\s*요약/.test(text),
+    });
+  } else {
+    blocks.push({ kind: 'text', text, links });
+  }
 }
 
 for (const line of (post.body ?? '').split('\n')) {
-  if (imgRe.test(line)) {
+  const img = line.match(imgRe);
+  const heading = line.match(headingRe);
+  const quote = line.match(quoteRe);
+
+  if (img) {
     flush();
     photoCount++;
     blocks.push({
       kind: 'photo',
       index: photoCount,
       label: `photo_${String(photoCount).padStart(2, '0')}`,
+      url: img[2],
+      alt: img[1],
       isThumb: photoCount === 1,
     });
   } else if (videoRe.test(line)) {
     flush();
     blocks.push({ kind: 'video', note: (line.match(videoRe)?.[1] || '').trim() });
+  } else if (heading) {
+    flush();
+    blocks.push({
+      kind: 'heading',
+      text: mdToPlain(heading[1]).trim(),
+      links: extractLinks(heading[1]),
+    });
+  } else if (quote) {
+    // 인용블록은 연속 줄을 하나로 묶는다
+    if (bufKind !== 'quote') {
+      flush();
+      bufKind = 'quote';
+    }
+    buf.push(quote[1]);
   } else {
+    if (bufKind === 'quote') {
+      // 인용 종료 — 빈 줄이면 그냥 닫고, 내용이 있으면 닫은 뒤 일반 텍스트 시작
+      if (!line.trim()) {
+        flush();
+        bufKind = 'text';
+        continue;
+      }
+      flush();
+      bufKind = 'text';
+    }
     buf.push(line);
   }
 }
 flush();
 
-const photoTotal = blocks.filter((b) => b.kind === 'photo').length;
+const photos = blocks.filter((b): b is Extract<Block, { kind: 'photo' }> => b.kind === 'photo');
+const photoTotal = photos.length;
 const videoTotal = blocks.filter((b) => b.kind === 'video').length;
+const copyableTotal = blocks.filter(
+  (b) => b.kind === 'text' || b.kind === 'heading' || b.kind === 'quote',
+).length;
+
 const tagsLine = post.data.tags.map((t) => `#${t}`).join(' ');
 const sponsorInfo = post.data.sponsorInfo;
 const isSponsored =
@@ -87,6 +153,28 @@ const isSponsored =
   post.data.purchaseType === 'gifted' ||
   post.data.purchaseType === 'service-experience' ||
   post.data.sponsored;
+
+// 데스크톱용 "본문 전체 한 번에 복사" — 사진/영상 자리는 자리표시자로 남긴다
+const fullText = blocks
+  .map((b) => {
+    if (b.kind === 'photo') return `[📷 ${b.label}]`;
+    if (b.kind === 'video') return `[🎬 영상${b.note ? ` — ${b.note}` : ''}]`;
+    return b.text;
+  })
+  .join('\n\n');
+
+// 발행 전 체크리스트 (2026 기준)
+const checklist = [
+  '제목에 메인 키워드가 앞쪽에 있는지',
+  '소제목은 "제목 2" 서식, TL;DR/FAQ는 "인용구" 서식으로 지정',
+  `사진 ${photoTotal}장 전부 삽입 (원본 순서 유지)`,
+  videoTotal > 0
+    ? `영상/클립 ${videoTotal}개 삽입 — 2026 영상 포함 문서 가점`
+    : '가능하면 클립(숏폼) 1개 삽입 — 영상 포함 문서 가점',
+  '주제 분류 지정 + 태그 입력',
+  '장소/지도 첨부 (해당되는 글이면)',
+  '발행 후 이 글 URL을 frontmatter의 naverPostUrl에 기록',
+];
 ---
 
 <html lang="ko">
@@ -103,9 +191,9 @@ const isSponsored =
       * { box-sizing: border-box; }
       body {
         font-family: 'Noto Sans KR', sans-serif;
-        max-width: 640px;
+        max-width: 660px;
         margin: 0 auto;
-        padding: 1rem 0.9rem 4rem;
+        padding: 1rem 0.9rem 5rem;
         line-height: 1.85;
         color: #2b2b2b;
         background: #fafafa;
@@ -114,19 +202,61 @@ const isSponsored =
         background: #eef6ff;
         border: 1px solid #cfe3fb;
         padding: 0.9rem 1rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
         border-radius: 12px;
         font-size: 0.85rem;
       }
       .guide h3 { margin: 0 0 0.5rem; font-size: 0.95rem; }
       .guide ol { padding-left: 1.1rem; margin: 0.4rem 0 0; }
       .guide .meta { margin: 0.3rem 0; }
+      details.checklist {
+        background: #fff;
+        border: 1px solid #e3e3e3;
+        border-radius: 12px;
+        padding: 0.7rem 0.9rem;
+        margin-bottom: 1rem;
+        font-size: 0.85rem;
+      }
+      details.checklist summary { font-weight: 700; cursor: pointer; }
+      details.checklist label {
+        display: flex;
+        gap: 0.5rem;
+        align-items: flex-start;
+        margin-top: 0.5rem;
+        line-height: 1.5;
+      }
+      .progress-bar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: #fafafa;
+        padding: 0.5rem 0;
+        margin-bottom: 0.4rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #555;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+        border-bottom: 1px solid #eee;
+      }
+      .progress-bar button {
+        border: 1px solid #ddd;
+        background: #fff;
+        border-radius: 8px;
+        padding: 0.25rem 0.6rem;
+        font-size: 0.75rem;
+        cursor: pointer;
+        font-family: inherit;
+      }
       .copy-row {
         display: flex;
         align-items: stretch;
         gap: 0.5rem;
         margin: 0.6rem 0;
       }
+      .copy-row.done .copy-src { background: #f4fbf6; border-color: #b7e2c6; }
       .copy-src {
         flex: 1;
         background: #fff;
@@ -140,23 +270,50 @@ const isSponsored =
       }
       .copy-src.title { font-weight: 700; font-size: 1.1rem; }
       .copy-src.tags { color: #1a73e8; font-size: 0.92rem; }
+      .copy-src.heading { font-weight: 700; font-size: 1.05rem; }
+      .copy-src.quote {
+        border-left: 4px solid #03c75a;
+        background: #f7fdf9;
+      }
       .copy-btn {
         flex: 0 0 auto;
         align-self: flex-start;
         position: sticky;
-        top: 0.5rem;
+        top: 3rem;
         min-width: 56px;
         padding: 0.55rem 0.6rem;
         border: none;
         border-radius: 10px;
-        background: #03c75a; /* 네이버 그린 */
+        background: #03c75a;
         color: #fff;
         font-weight: 700;
         font-size: 0.85rem;
         cursor: pointer;
+        font-family: inherit;
       }
       .copy-btn:active { transform: scale(0.96); }
       .copy-btn.done { background: #1a73e8; }
+      .badge {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 0.1rem 0.45rem;
+        border-radius: 999px;
+        margin-bottom: 0.3rem;
+      }
+      .badge.h { background: #ffeccf; color: #a4630f; }
+      .badge.q { background: #dff5e6; color: #16803c; }
+      .links {
+        margin: -0.2rem 0 0.8rem;
+        padding: 0.5rem 0.7rem;
+        background: #fff;
+        border: 1px dashed #cbd5e1;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        color: #475569;
+        word-break: break-all;
+      }
+      .links b { color: #1a73e8; }
       .section-label {
         font-size: 0.78rem;
         font-weight: 700;
@@ -164,24 +321,51 @@ const isSponsored =
         margin: 1.4rem 0 0.2rem;
         letter-spacing: 0.02em;
       }
-      .marker {
+      .photo-card {
+        margin: 0.9rem 0;
+        border: 1px dashed #f0b96b;
+        background: #fff8ef;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .photo-card.thumb { border-color: #f29cab; background: #fff2f4; }
+      .photo-card img {
+        width: 100%;
+        display: block;
+        background: #eee;
+      }
+      .photo-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        padding: 0.55rem 0.7rem;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #b9722a;
+      }
+      .photo-card.thumb .photo-meta { color: #c0405a; }
+      .photo-meta a {
+        font-size: 0.78rem;
+        text-decoration: none;
+        background: #fff;
+        border: 1px solid #e0d3c2;
+        border-radius: 8px;
+        padding: 0.25rem 0.55rem;
+        color: #7a5b39;
+      }
+      .photo-alt {
+        padding: 0 0.7rem 0.6rem;
+        font-size: 0.75rem;
+        color: #8a7a68;
+        font-weight: 400;
+      }
+      .marker.video {
         margin: 0.9rem 0;
         padding: 0.7rem 0.9rem;
         border-radius: 10px;
         font-size: 0.9rem;
         font-weight: 700;
-      }
-      .marker.photo {
-        background: #fff4e5;
-        border: 1px dashed #f0b96b;
-        color: #b9722a;
-      }
-      .marker.photo.thumb {
-        background: #ffe9ec;
-        border-color: #f29cab;
-        color: #c0405a;
-      }
-      .marker.video {
         background: #eef0ff;
         border: 1px dashed #9aa6f0;
         color: #4453c7;
@@ -194,6 +378,19 @@ const isSponsored =
         color: #8a6d00;
       }
       hr { border: none; border-top: 1px solid #eee; margin: 1.6rem 0; }
+      .full-copy {
+        width: 100%;
+        margin-top: 0.5rem;
+        padding: 0.6rem;
+        border: 1px solid #03c75a;
+        background: #fff;
+        color: #03c75a;
+        font-weight: 700;
+        border-radius: 10px;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 0.85rem;
+      }
     </style>
   </head>
   <body>
@@ -201,20 +398,34 @@ const isSponsored =
       <h3>📋 네이버 업로드 모드</h3>
       <p class="meta"><strong>카테고리:</strong> {categoryLabels[post.data.category]}</p>
       <p class="meta">
-        <strong>사진:</strong> {photoTotal}장
-        {videoTotal > 0 && <> · <strong>영상 마커:</strong> {videoTotal}개</>}
+        <strong>사진:</strong> {photoTotal}장 · <strong>복사 블록:</strong> {copyableTotal}개
+        {videoTotal > 0 && <> · <strong>영상:</strong> {videoTotal}개</>}
       </p>
       <p class="meta" style="margin-top:0.6rem;"><strong>사용법</strong></p>
       <ol>
-        <li>텍스트 블록의 <b>[복사]</b> → 네이버 에디터에 붙여넣기</li>
-        <li>🟧 <b>사진 마커</b>가 나오면 그 위치에 해당 사진을 직접 업로드 (input 원본 사용)</li>
-        <li>🟦 <b>영상 마커</b>가 나오면 그 위치에 영상 삽입 (네이버는 영상 포함 글에 가점)</li>
-        <li>위→아래 순서대로 반복하면 글 한 편 완성</li>
+        <li>블록의 <b>[복사]</b> → 네이버 에디터에 붙여넣기 (복사한 블록은 초록색으로 표시되고 새로고침해도 유지됨)</li>
+        <li>🟨 <b>제목2</b> / 🟩 <b>인용구</b> 배지가 붙은 블록은 네이버에서 해당 서식을 지정</li>
+        <li>사진 카드가 나오면 <b>저장</b>(또는 사진 길게 눌러 저장) 후 그 자리에 업로드</li>
+        <li>🟦 영상 자리에는 클립/동영상 삽입</li>
       </ol>
+      <button class="full-copy" type="button" id="btn-full">📄 본문 전체 한 번에 복사 (PC용 · 사진 자리는 표시로 남음)</button>
+      <textarea id="full-src" hidden>{fullText}</textarea>
+    </div>
+
+    <details class="checklist">
+      <summary>✅ 발행 전 체크리스트 (2026 기준)</summary>
+      {checklist.map((item) => (
+        <label><input type="checkbox" /> <span>{item}</span></label>
+      ))}
+    </details>
+
+    <div class="progress-bar">
+      <span id="progress-text">복사 진행 0 / {copyableTotal}</span>
+      <button type="button" id="btn-reset">진행 초기화</button>
     </div>
 
     <div class="section-label">제목</div>
-    <div class="copy-row">
+    <div class="copy-row" data-block="title">
       <div class="copy-src title">{post.data.title}</div>
       <button class="copy-btn" type="button">복사</button>
     </div>
@@ -222,7 +433,7 @@ const isSponsored =
     {tagsLine && (
       <>
         <div class="section-label">태그 (본문 맨 끝 또는 태그칸에)</div>
-        <div class="copy-row">
+        <div class="copy-row" data-block="tags">
           <div class="copy-src tags">{tagsLine}</div>
           <button class="copy-btn" type="button">복사</button>
         </div>
@@ -232,7 +443,7 @@ const isSponsored =
     {isSponsored && sponsorInfo && (
       <>
         <div class="section-label">⚠️ 협찬 고지 (상단 1회 — 법정/가이드 요구 시)</div>
-        <div class="copy-row">
+        <div class="copy-row" data-block="disclosure">
           <div class="copy-src disclosure">{sponsorInfo}</div>
           <button class="copy-btn" type="button">복사</button>
         </div>
@@ -242,7 +453,7 @@ const isSponsored =
     {post.data.productLink && (
       <>
         <div class="section-label">🔗 제품 링크</div>
-        <div class="copy-row">
+        <div class="copy-row" data-block="product-link">
           <div class="copy-src" style="font-size:0.85rem;">{post.data.productLink}</div>
           <button class="copy-btn" type="button">복사</button>
         </div>
@@ -252,41 +463,84 @@ const isSponsored =
     <hr />
     <div class="section-label">본문 (블록 순서대로 복붙)</div>
 
-    {blocks.map((block) =>
-      block.kind === 'text' ? (
-        <div class="copy-row">
-          <div class="copy-src">{block.text}</div>
-          <button class="copy-btn" type="button">복사</button>
+    {blocks.map((block, i) =>
+      block.kind === 'photo' ? (
+        <div class={`photo-card${block.isThumb ? ' thumb' : ''}`}>
+          <img src={block.url} alt={block.alt} loading="lazy" />
+          <div class="photo-meta">
+            <span>📷 {block.label}{block.isThumb ? ' (대표/썸네일)' : ''}</span>
+            <span>
+              <a href={block.url} target="_blank" rel="noopener">열기</a>
+              {' '}
+              <a href={toDownloadUrl(block.url)} download>저장</a>
+            </span>
+          </div>
+          {block.alt && <div class="photo-alt">alt: {block.alt}</div>}
         </div>
-      ) : block.kind === 'photo' ? (
-        <div class={`marker photo${block.isThumb ? ' thumb' : ''}`}>
-          📷 여기 <b>{block.label}</b> 사진 삽입{block.isThumb ? ' (썸네일/대표)' : ''}
+      ) : block.kind === 'video' ? (
+        <div class="marker video">
+          🎬 여기 영상/클립 삽입{block.note ? ` — ${block.note}` : ''}
         </div>
       ) : (
-        <div class="marker video">
-          🎬 여기 영상 삽입{block.note ? ` — ${block.note}` : ''}
-        </div>
-      )
+        <>
+          {block.kind === 'heading' && <span class="badge h">네이버 서식: 제목 2</span>}
+          {block.kind === 'quote' && (
+            <span class="badge q">
+              네이버 서식: 인용구{block.isTldr ? ' (한 줄 요약)' : ''}
+            </span>
+          )}
+          <div class="copy-row" data-block={`b${i}`}>
+            <div class={`copy-src ${block.kind}`}>{block.text}</div>
+            <button class="copy-btn" type="button">복사</button>
+          </div>
+          {block.links.length > 0 && (
+            <div class="links">
+              🔗 이 문단에 있던 링크 (네이버에서 직접 연결):
+              {block.links.map((href) => (
+                <div><b>{href}</b></div>
+              ))}
+            </div>
+          )}
+        </>
+      ),
     )}
 
-    <script is:inline>
-      document.querySelectorAll('.copy-btn').forEach((btn) => {
+    <script is:inline define:vars={{ slug: post.id }}>
+      const KEY = `naver-upload:${slug}`;
+      const done = new Set(JSON.parse(localStorage.getItem(KEY) || '[]'));
+      const rows = document.querySelectorAll('.copy-row[data-block]');
+      const bodyRows = document.querySelectorAll('.copy-row[data-block^="b"]');
+      const progressText = document.getElementById('progress-text');
+
+      function save() {
+        localStorage.setItem(KEY, JSON.stringify([...done]));
+        const count = [...bodyRows].filter((r) => done.has(r.dataset.block)).length;
+        progressText.textContent = `복사 진행 ${count} / ${bodyRows.length}`;
+      }
+
+      async function copyText(text) {
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        }
+      }
+
+      rows.forEach((row) => {
+        if (done.has(row.dataset.block)) row.classList.add('done');
+        const btn = row.querySelector('.copy-btn');
         btn.addEventListener('click', async () => {
-          const src = btn.closest('.copy-row')?.querySelector('.copy-src');
-          if (!src) return;
-          const text = src.innerText;
-          try {
-            await navigator.clipboard.writeText(text);
-          } catch {
-            const ta = document.createElement('textarea');
-            ta.value = text;
-            ta.style.position = 'fixed';
-            ta.style.opacity = '0';
-            document.body.appendChild(ta);
-            ta.select();
-            document.execCommand('copy');
-            document.body.removeChild(ta);
-          }
+          await copyText(row.querySelector('.copy-src').innerText);
+          row.classList.add('done');
+          done.add(row.dataset.block);
+          save();
           const original = btn.textContent;
           btn.textContent = '복사됨';
           btn.classList.add('done');
@@ -295,6 +549,22 @@ const isSponsored =
             btn.classList.remove('done');
           }, 1200);
         });
+      });
+      save();
+
+      document.getElementById('btn-reset').addEventListener('click', () => {
+        done.clear();
+        localStorage.removeItem(KEY);
+        rows.forEach((r) => r.classList.remove('done'));
+        save();
+      });
+
+      const btnFull = document.getElementById('btn-full');
+      btnFull.addEventListener('click', async () => {
+        await copyText(document.getElementById('full-src').value);
+        const original = btnFull.textContent;
+        btnFull.textContent = '✅ 본문 전체 복사됨';
+        setTimeout(() => { btnFull.textContent = original; }, 1500);
       });
     </script>
   </body>
