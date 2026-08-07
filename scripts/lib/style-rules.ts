@@ -677,18 +677,30 @@ export function lintPostBody(
   // frontmatter 분리
   const bodyOnly = body.replace(/^---[\s\S]*?---\s*/m, '').trim();
 
-  // 0. 협찬/제공 표현은 고객 가이드나 법정 고지로 요구된 상단 1회만 허용
+  // 0. 협찬/제공 표현은 고객 가이드나 법정 고지로 요구된 상단 1회만 허용.
+  //    고지 문구는 브랜드마다 달라서(무상 제공 / 제공받아 작성 / 원고료 지원 등)
+  //    특정 문구가 아니라 "본문 맨 위 줄에 있는 고지"를 1회 허용한다.
   const canHaveDisclosure = purchaseType !== 'self-purchased';
-  const disclosurePattern = /제품을\s*무상으로\s*제공\s*받았음/;
-  const disclosureMatch = bodyOnly.match(disclosurePattern);
-  const disclosureInHeader =
-    !!disclosureMatch && bodyOnly.indexOf(disclosureMatch[0]) <= 120;
+  const disclosureRe = /협찬\s*받|제공\s*받|무상으로\s*제공/;
+
+  const lines0 = bodyOnly.split('\n');
+  let headerDisclosureIdx = -1;
+  let scanned = 0;
+  for (let i = 0; i < lines0.length; i++) {
+    if (scanned > 200) break; // 본문 맨 앞(고지 자리)만 대상
+    if (disclosureRe.test(lines0[i])) {
+      headerDisclosureIdx = i;
+      break;
+    }
+    scanned += lines0[i].length + 1;
+  }
+
   const bodyWithoutAllowedDisclosure =
-    canHaveDisclosure && disclosureInHeader
-      ? bodyOnly.replace(disclosurePattern, '')
+    canHaveDisclosure && headerDisclosureIdx >= 0
+      ? lines0.filter((_, i) => i !== headerDisclosureIdx).join('\n')
       : bodyOnly;
 
-  if (/협찬\s*받|제공\s*받/.test(bodyWithoutAllowedDisclosure)) {
+  if (disclosureRe.test(bodyWithoutAllowedDisclosure)) {
     issues.push({
       level: 'error',
       code: 'sponsorship-disclosure',
@@ -696,7 +708,7 @@ export function lintPostBody(
         '협찬/제공 표현은 고객 가이드나 법정 고지로 요구된 상단 1회만 허용',
     });
   }
-  if (!canHaveDisclosure && disclosureMatch) {
+  if (!canHaveDisclosure && headerDisclosureIdx >= 0) {
     issues.push({
       level: 'error',
       code: 'sponsorship-disclosure',
