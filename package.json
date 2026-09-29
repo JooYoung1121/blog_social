@@ -18,7 +18,8 @@
     "keywords": "tsx scripts/keyword-research.ts",
     "extract-ai-layer": "tsx scripts/extract-ai-layer.ts",
     "perf-report": "tsx scripts/perf-report.ts",
-    "refresh": "tsx scripts/refresh-candidates.ts"
+    "refresh": "tsx scripts/refresh-candidates.ts",
+    "intake": "tsx scripts/intake.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.1",

@@ -9,6 +9,7 @@
 
 | 문서 | 언제 읽어야 하는가 |
 |---|---|
+| [`docs/talk-to-claude.md`](docs/talk-to-claude.md) | **지나님이 자연어로 지시할 때(기본 경로).** 요청→동작 매핑과 8단계 실행 규약. 지나님은 명령어를 치지 않는다 |
 | [`docs/blog-writing-guide.md`](docs/blog-writing-guide.md) | **모든 새 글 작성 시.** 톤, 구조, 사진 배치, SEO, 금지 규칙 정의 |
 | [`docs/ai-friendly-guide.md`](docs/ai-friendly-guide.md) | **AI 탭 / GPT / Gemini / Perplexity 인용을 노릴 때.** 기존 글쓰기 가이드 위에 얹는 AI 친화 레이어 (TL;DR, FAQ, 엔티티, 구조화 데이터) |
 | [`docs/ab-comparison-protocol.md`](docs/ab-comparison-protocol.md) | **A/B 비교 모드 (input 폴더에 `AB.txt` 마커가 있을 때).** Claude/Codex 두 도구가 같은 입력으로 두 글을 작성하는 절차와 측정 지표 |
@@ -34,6 +35,16 @@ Astro 기반 개인 웹 블로그를 생성하고, 네이버 업로드 전 웹 �
 - **배포:** Vercel (git push → 자동 배포)
 
 ## 새 글 작성 명령
+
+> ⚠️ 아래는 **Claude/Codex가 실행하는** 명령입니다. 지나님께 치라고 안내하지 마세요.
+> 지나님과의 대화 흐름은 [`docs/talk-to-claude.md`](docs/talk-to-claude.md) 를 따릅니다.
+
+사진 받아오기(가장 먼저):
+```bash
+npm run intake -- --from <사진폴더> --title "글 제목"
+npm run intake -- --from-recent --hours 24 --title "글 제목"   # 에어드롭 직후
+```
+
 ```bash
 npm run new-post -- --input <사진폴더> --category <카테고리> [옵션]
 ```
