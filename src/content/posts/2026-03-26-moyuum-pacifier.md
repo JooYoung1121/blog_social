@@ -27,6 +27,18 @@ images:
   - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776061662/blog/2026/04/2026-03-26-moyuum-pacifier/photo_43.jpg"
   - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776061664/blog/2026/04/2026-03-26-moyuum-pacifier/photo_44.jpg"
 sponsored: false
+tldr: "모윰 올실리콘 공갈젖꼭지는 S에서 M으로 넘어갈 때 적응이 제일 편했어요."
+faq:
+  - q: "모윰 공갈젖꼭지 사이즈업은 언제 하나요?"
+    a: "자주 뱉거나 입 옆으로 삐져나오면 그때예요. 봄이는 3개월쯤 그 신호가 왔어요."
+  - q: "S랑 M은 뭐가 다른가요?"
+    a: "젖꼭지 부분 크기가 달라요. M으로 바꾸니까 입에 더 안정적으로 물리더라구요."
+  - q: "올실리콘이면 소독은 어떻게 하나요?"
+    a: "통으로 돼 있어서 젖병소독기에 같이 넣어 돌려요. 분리형보다 훨씬 편했어요."
+  - q: "클립은 꼭 사야 하나요?"
+    a: "외출이 잦으면 있는 게 나아요. 뱉어도 바닥에 안 닿으니까 다시 소독할 일이 줄거든요."
+  - q: "아이가 쪽쪽이를 거부하면요?"
+    a: "봄이는 사이즈를 올렸더니 바로 다시 물었어요. 거부가 길어지면 사이즈부터 확인해보세요."
 draft: false
 ---
 

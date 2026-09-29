@@ -1,4 +1,5 @@
 ---
+import { CATEGORY_LABELS } from '../../scripts/lib/style-rules';
 interface Props {
   title: string;
   description: string;
@@ -11,13 +12,7 @@ interface Props {
 
 const { title, description, date, category, thumbnail, slug, sponsored } = Astro.props;
 
-const categoryLabels: Record<string, string> = {
-  'baby-products': '육아용품 리뷰',
-  parenting: '육아일기',
-  'daily-life': '일상',
-  food: '맛집/요리',
-  travel: '여행/나들이',
-};
+const categoryLabels = CATEGORY_LABELS;
 
 const formattedDate = date.toLocaleDateString('ko-KR', {
   year: 'numeric',

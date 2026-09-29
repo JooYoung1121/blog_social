@@ -1,6 +1,7 @@
 ---
 export const prerender = true;
 
+import { CATEGORY_LABELS } from '../../../scripts/lib/style-rules';
 import { getCollection } from 'astro:content';
 
 export async function getStaticPaths() {
@@ -13,13 +14,7 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 
-const categoryLabels: Record<string, string> = {
-  'baby-products': '육아용품 리뷰',
-  parenting: '육아일기',
-  'daily-life': '일상',
-  food: '맛집/요리',
-  travel: '여행/나들이',
-};
+const categoryLabels = CATEGORY_LABELS;
 
 // ──────────────────────────────────────────────
 // 본문(raw markdown)을 "네이버 스마트에디터 붙여넣기 단위"로 분절.

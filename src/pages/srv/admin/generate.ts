@@ -12,6 +12,11 @@ import {
   suggestForDraft,
   type PostMeta,
 } from '../../../../scripts/lib/related-posts';
+import {
+  DRAFT_MODEL,
+  MAX_TOKENS,
+  effortFor,
+} from '../../../../scripts/lib/model';
 
 interface GenerateBody {
   category: string;
@@ -27,6 +32,8 @@ interface GenerateBody {
   target?: 'search' | 'homefeed' | 'both';
   imageUrls: string[];
   model?: string;
+  /** 질문형 소제목 (npm run keywords 산출물을 붙여넣기) */
+  questions?: string[];
 }
 
 export const POST: APIRoute = async ({ request }) => {
@@ -45,7 +52,8 @@ export const POST: APIRoute = async ({ request }) => {
       intent = 'review',
       target = 'search',
       imageUrls = [],
-      model = 'claude-opus-4-7',
+      model = DRAFT_MODEL,
+      questions = [],
     } = body;
 
     const today = new Date().toISOString().slice(0, 10);
@@ -58,6 +66,7 @@ export const POST: APIRoute = async ({ request }) => {
       productName: topic,
       mainKeyword,
       subKeywords,
+      questions,
       notes,
       clientGuide,
     });
@@ -161,9 +170,9 @@ export const POST: APIRoute = async ({ request }) => {
     const client = new Anthropic();
     const stream = client.messages.stream({
       model,
-      max_tokens: 16000,
+      max_tokens: MAX_TOKENS,
       thinking: { type: 'adaptive' },
-      output_config: { effort: 'high' },
+      output_config: { effort: effortFor(imageUrls.length) },
       system: [
         {
           type: 'text',

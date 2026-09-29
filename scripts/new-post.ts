@@ -63,7 +63,7 @@ Usage: npm run new-post -- --input <dir> --category <category> [options]
 
 Required:
   --input <dir>           사진이 있는 디렉토리 경로
-  --category <category>   baby-products | parenting | daily-life | food | travel
+  --category <category>   baby-products | parenting | pet | daily-life | food | travel
 
 Optional:
   --title <title>         글 제목

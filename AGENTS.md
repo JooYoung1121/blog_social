@@ -38,13 +38,32 @@ Astro 기반 개인 웹 블로그를 생성하고, 네이버 업로드 전 웹 �
 npm run new-post -- --input <사진폴더> --category <카테고리> [옵션]
 ```
 
-카테고리: `baby-products` | `parenting` | `daily-life` | `food` | `travel`
+카테고리: `baby-products` | `parenting` | `pet` | `daily-life` | `food` | `travel`
+
+**C-rank 2축 (2026-09-29 결정):** 육아(`baby-products`, `parenting`) / 반려견(`pet`) 이 주력 축.
+나머지는 축 밖이라 누적 전문성 점수를 기대하지 않는다. 정의는 `style-rules.ts` 의 `HUB_AXES`.
 
 옵션:
 - `--title "제목"`, `--description "설명"`, `--tags "태그1,태그2"`
 - `--sponsor-info "브랜드명으로부터 협찬받아"`, `--product-link "URL"`
 
-또는 input 폴더에 `topic.txt`, `notes.txt`, `product-url.txt`, `sponsor.txt`, `client-guide.md` 파일을 넣으면 자동 인식. 자세한 양식은 [`docs/writing-input-guide.md`](docs/writing-input-guide.md) 참고.
+또는 input 폴더에 `topic.txt`, `notes.txt`, `questions.txt`, `photo-notes.txt`, `product-url.txt`, `sponsor.txt`, `client-guide.md` 파일을 넣으면 자동 인식. 자세한 양식은 [`docs/writing-input-guide.md`](docs/writing-input-guide.md) 참고.
+
+### 키워드 리서치 (글 쓰기 전에 먼저)
+```bash
+npm run keywords -- --seed "실온이유식" --out input/2026-10-01-제품명
+```
+네이버 검색광고 API로 연관키워드+월간검색수를, 오픈 API로 블로그 문서수를 받아
+**기회점수(검색량÷문서수)** 순으로 정렬하고, 질문형 소제목 6개를 생성한다.
+⚠️ 연관검색어 서비스는 2026-04-30 종료됐다. 이 API가 사실상 유일한 공식 확장 경로.
+
+### 성과 피드백 (월 1회)
+```bash
+npm run perf-report      # data/performance.csv 집계
+npm run refresh          # 지금 갱신하면 이득인 글
+```
+크리에이터 어드바이저 → `data/performance.csv` 에 수동 입력. 공식 API가 없다.
+이 파일이 비어 있으면 초안 생성기는 계속 같은 품질의 글만 뽑는다 — **유일한 학습 입력**이다.
 
 Codex 결과물 비교 시에는 [`docs/codex-workflow.md`](docs/codex-workflow.md)를 따른다. `npm run generate-draft`는 Claude API 기반 자동 생성이므로 Codex 초안 비교용으로 사용하지 않는다.
 
@@ -54,13 +73,21 @@ Codex 결과물 비교 시에는 [`docs/codex-workflow.md`](docs/codex-workflow.
 - `src/pages/naver/[...slug].astro` — **네이버 업로드 모드**. 모든 발행 글에 자동 생성. 블록 단위 복사(진행 상태 localStorage 저장), 소제목/인용 네이버 서식 배지, 사진 카드(그 자리에서 열기/저장), 영상·클립 삽입 위치, 문단별 링크 URL 노출, 발행 전 체크리스트
 - `src/pages/srv/admin/*` — admin API. `posts`(글 목록/원문 불러오기) · `lint`(발행 전 룰 검사) · `generate`(AI 초안) · `publish`(원래 경로에 커밋, 수정 시 `updated` 자동 스탬프)
 - `src/lib/github.ts` — GitHub Contents/Trees 헬퍼. **글 경로는 항상 slug로 트리에서 찾는다** (연/월로 재계산하면 과거 글 수정 시 중복 파일 발생)
-- `scripts/` — CLI 도구 (new-post, upload-images, generate-naver)
+- `scripts/` — CLI 도구 (new-post, upload-images, generate-naver, keyword-research, perf-report, refresh-candidates, extract-ai-layer)
+- `scripts/lib/model.ts` — **Claude 모델 ID 단일 소스.** 모델을 바꿀 땐 여기만 고친다
+- `scripts/lib/naver-api.ts` — 네이버 검색광고 API / 검색 오픈 API 클라이언트
+- `scripts/lib/performance.ts` — 성과 데이터 로더 (학습 루프 입력)
+- `src/lib/jsonld.ts` — JSON-LD `@graph` 빌더 (BlogPosting/FAQPage/Product/Breadcrumb)
+- `src/pages/llms.txt.ts` — LLM 크롤러용 사이트 요약. 네이버 블로그는 외부 크롤러가 못 읽으므로 이 사이트가 유일한 경로
+- `data/performance.csv` — 성과 측정 기록 (월 1회 수동 입력)
 
 ## 환경변수 (.env)
+전체 목록은 `.env.example` 참고. 핵심:
 ```
-CLOUDINARY_CLOUD_NAME=xxx
-CLOUDINARY_API_KEY=xxx
-CLOUDINARY_API_SECRET=xxx
+CLOUDINARY_CLOUD_NAME / _API_KEY / _API_SECRET   # 사진
+ANTHROPIC_API_KEY                                 # 초안 생성
+NAVER_AD_CUSTOMER_ID / _API_KEY / _SECRET_KEY     # 키워드 리서치 (검색광고 API)
+NAVER_OPENAPI_CLIENT_ID / _CLIENT_SECRET          # 문서수 조회 (검색 오픈 API)
 ```
 
 ---

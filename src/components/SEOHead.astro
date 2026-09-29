@@ -1,4 +1,6 @@
 ---
+import { buildPostGraph, buildSiteGraph } from '../lib/jsonld';
+
 interface Props {
   title: string;
   description: string;
@@ -8,6 +10,14 @@ interface Props {
   publishedDate?: Date;
   updatedDate?: Date;
   tags?: string[];
+  categoryLabel?: string;
+  // AI 친화 레이어 (docs/ai-friendly-guide.md §2.1) — 전부 optional
+  tldr?: string;
+  faq?: { q: string; a: string }[];
+  brand?: string;
+  product?: string;
+  certifications?: string[];
+  productLink?: string;
 }
 
 const {
@@ -19,6 +29,13 @@ const {
   publishedDate,
   updatedDate,
   tags = [],
+  categoryLabel,
+  tldr,
+  faq,
+  brand,
+  product,
+  certifications,
+  productLink,
 } = Astro.props;
 
 const siteUrl = 'https://jinas-holiday.vercel.app';
@@ -26,46 +43,27 @@ const fullTitle = `${title} | 지나의 휴일`;
 const canonical = canonicalUrl || new URL(Astro.url.pathname, siteUrl).href;
 const image = ogImage || `${siteUrl}/og-default.png`;
 
-// JSON-LD structured data
-const jsonLd = type === 'article'
-  ? {
-      '@context': 'https://schema.org',
-      '@type': 'BlogPosting',
-      headline: title,
-      description,
-      image,
-      datePublished: publishedDate?.toISOString(),
-      dateModified: (updatedDate ?? publishedDate)?.toISOString(),
-      author: {
-        '@type': 'Person',
-        name: '지나의 휴일',
-        url: 'https://blog.naver.com/snf00467',
-      },
-      publisher: {
-        '@type': 'Organization',
-        name: '지나의 휴일',
-        logo: {
-          '@type': 'ImageObject',
-          url: `${siteUrl}/favicon.svg`,
-        },
-      },
-      mainEntityOfPage: {
-        '@type': 'WebPage',
-        '@id': canonical,
-      },
-      keywords: tags.join(', '),
-    }
-  : {
-      '@context': 'https://schema.org',
-      '@type': 'WebSite',
-      name: '지나의 휴일',
-      description: '육아, 일상, 솔직한 리뷰를 기록합니다',
-      url: siteUrl,
-      author: {
-        '@type': 'Person',
-        name: '지나의 휴일',
-      },
-    };
+// JSON-LD — 글 페이지는 @graph로 Article/FAQPage/Product/Breadcrumb를 관계까지 묶는다.
+const jsonLd =
+  type === 'article'
+    ? buildPostGraph({
+        siteUrl,
+        canonical,
+        title,
+        description,
+        image,
+        publishedDate,
+        updatedDate,
+        tags,
+        categoryLabel,
+        tldr,
+        faq,
+        brand,
+        product,
+        certifications,
+        productLink,
+      })
+    : buildSiteGraph(siteUrl);
 ---
 
 <!-- Primary Meta -->

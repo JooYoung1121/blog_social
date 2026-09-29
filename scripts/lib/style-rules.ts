@@ -154,6 +154,22 @@ export function getForbiddenPatterns(
 /** @deprecated purchaseType 인자 없는 버전 — getForbiddenPatterns(purchaseType) 사용 권장 */
 export const FORBIDDEN_PATTERNS = getForbiddenPatterns();
 
+/**
+ * frontmatter 로부터 purchaseType 추론.
+ *
+ * 초기 글들은 purchaseType 없이 legacy `sponsored: true/false` 만 갖고 있다.
+ * 이걸 추론하지 않으면 협찬 고지 문구가 "직구매 글의 금지 표현"으로 오판된다.
+ * lint / 갱신 후보 탐지 등 frontmatter 를 읽는 모든 곳이 이 함수를 쓴다.
+ */
+export function inferPurchaseType(
+  fm: Record<string, string>,
+): PurchaseType | undefined {
+  if (fm.purchaseType) return fm.purchaseType as PurchaseType;
+  if (fm.sponsored === 'true') return 'sponsored';
+  if (fm.sponsored === 'false') return 'self-purchased';
+  return undefined;
+}
+
 // ──────────────────────────────────────────────
 // 분량 / 구조 룰 (memory: project_blog_style_guide.md, project_top_blogger_structure.md)
 // ──────────────────────────────────────────────
@@ -167,6 +183,50 @@ export const STRUCTURE_RULES = {
   consecutive_photos_max: 2, // 사진 3장 이상 연속 금지
   internal_links: { min: 2, max: 3 },
 } as const;
+
+// ──────────────────────────────────────────────
+// C-rank 주제 축 (2026-09-29 운영 결정)
+//
+// 네이버 C-rank는 "한 주제를 얼마나 깊이 꾸준히 다뤘는가"를 점수화한다고
+// 알려져 있고, AI 브리핑도 이를 참고하는 것으로 업계에서 분석된다
+// (공식 알고리즘 미공개 — 추정):
+//   - PageOne Works "네이버 AI 브리핑 2026"
+//     https://www.pageoneworks.com/article/naver-ai-briefing-optimization-guide-2026
+//   - SEO Korea "네이버 AI란? AI 브리핑·AI 탭 완벽 정리 2026"
+//     https://seo.co.kr/blog/what-is-naver-ai/
+//
+// 운영 결정: 육아 / 반려견 2축으로 간다. 두 축 모두 직접 경험 정보라
+// AI 브리핑 인용률이 높은 영역으로 보고된다. 'other'(일상·맛집·여행)는
+// 축 밖이라 누적 전문성 점수를 기대하지 않고, 홈피드·개별 품질로만 승부한다.
+// ──────────────────────────────────────────────
+export type HubAxis = 'parenting' | 'pet' | 'other';
+
+export const HUB_AXES: Record<
+  HubAxis,
+  { label: string; description: string; isCore: boolean }
+> = {
+  parenting: {
+    label: '육아',
+    description:
+      '신생아~영유아 육아용품 실사용 후기와 육아 기록. 봄이 기준 월령·반응·실패담이 핵심 신호.',
+    isCore: true,
+  },
+  pet: {
+    label: '반려견',
+    description:
+      '나니·스리 기준 반려견 사료·영양제·용품 실사용 후기. 급여 기간과 전후 변화가 핵심 신호.',
+    isCore: true,
+  },
+  other: {
+    label: '그 외',
+    description: 'C-rank 축 밖. 홈피드·개별 문서 품질로만 노출을 노린다.',
+    isCore: false,
+  },
+};
+
+export function hubOf(category?: string): HubAxis {
+  return (category && CATEGORY_META[category]?.hub) || 'other';
+}
 
 // ──────────────────────────────────────────────
 // 글자수 카테고리 차등 (2026 통합검색 대응)
@@ -187,6 +247,7 @@ export const BODY_CHARS_BY_CATEGORY: Record<
   { min: number; max: number }
 > = {
   'baby-products': { min: 2000, max: 2500 }, // 경쟁 키워드 多
+  pet: { min: 1800, max: 2300 }, // C-rank 2축 — 육아용품보다 문서수가 적어 살짝 낮춤
   travel: { min: 2000, max: 2500 },
   food: { min: 1700, max: 2200 },
   parenting: { min: 1500, max: 2000 }, // 일기형 — 기존 유지
@@ -438,29 +499,53 @@ export const HOMEFEED_VS_SEARCH = {
 // ──────────────────────────────────────────────
 export const CATEGORY_META: Record<
   string,
-  { label: string; description: string }
+  { label: string; emoji: string; description: string; hub: HubAxis }
 > = {
   'baby-products': {
     label: '육아용품 리뷰',
+    emoji: '\u{1F37C}',
     description: '봄이가 직접 쓴 솔직한 후기. 협찬과 직구매 모두.',
+    hub: 'parenting',
   },
   parenting: {
     label: '육아일기',
+    emoji: '\u{1F476}',
     description: '봄이의 성장 일기, 초보 엄마의 진심 공유.',
+    hub: 'parenting',
+  },
+  pet: {
+    label: '반려견',
+    emoji: '\u{1F415}',
+    description: '나니·스리와 함께하는 하루. 사료·영양제·용품 실사용 후기.',
+    hub: 'pet',
   },
   'daily-life': {
     label: '일상',
+    emoji: '\u2615',
     description: '용인 죽전 일상, 정보 공유, 출산휴가 가이드 등.',
+    hub: 'other',
   },
   food: {
     label: '맛집/요리',
+    emoji: '\u{1F37D}\uFE0F',
     description: '아이와 함께 가는 맛집, 집밥 레시피.',
+    hub: 'other',
   },
   travel: {
     label: '여행/나들이',
+    emoji: '\u{1F9F3}',
     description: '아기와 함께한 나들이, 키즈 카페, 여행 후기.',
+    hub: 'other',
   },
 };
+
+/** 카테고리 → 라벨 (UI 전역에서 이 맵 하나만 쓴다) */
+export const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
+  Object.entries(CATEGORY_META).map(([k, v]) => [k, v.label]),
+);
+
+/** 카테고리 슬러그 목록 (content.config.ts enum과 순서를 맞춘다) */
+export const CATEGORY_SLUGS = Object.keys(CATEGORY_META);
 
 // ──────────────────────────────────────────────
 // AI 시스템 프롬프트 빌더
@@ -475,6 +560,20 @@ export interface PromptOptions {
   subKeywords?: string[];
   notes?: string;
   clientGuide?: string; // 체험단 가이드 (최우선 반영, purchaseType 가이드 있을 때)
+
+  /**
+   * 노릴 질문형 소제목 (input/<slug>/questions.txt, npm run keywords 산출물).
+   * AI 브리핑은 "질문 → 자기완결 답변" 단위로 인용하므로,
+   * 소제목을 미리 질문으로 고정해 두면 인용 확률이 올라간다.
+   */
+  questions?: string[];
+
+  /**
+   * 성과 상위 글에서 뽑은 소제목 예시 (data/performance.csv 기반).
+   * 이 블로그에서 실제로 인용·체류를 만들어낸 패턴을 few-shot 으로 보여준다.
+   * 이게 이 시스템의 유일한 학습 경로다 (scripts/lib/performance.ts).
+   */
+  provenHeadings?: string[];
 }
 
 export function buildSystemPrompt(opts: PromptOptions): string {
@@ -488,6 +587,8 @@ export function buildSystemPrompt(opts: PromptOptions): string {
     subKeywords,
     notes,
     clientGuide,
+    questions,
+    provenHeadings,
   } = opts;
 
   const purchaseMeta = PURCHASE_TYPE_META[purchaseType];
@@ -629,6 +730,29 @@ export function buildSystemPrompt(opts: PromptOptions): string {
     `# 카테고리: ${category} (${categoryDesc})`,
     productName ? `# 제품/장소: ${productName}` : '',
     notes ? `# 추가 메모 (사용자가 적어준 핵심 포인트)\n${notes}` : '',
+    questions && questions.length > 0
+      ? [
+          '# 소제목으로 쓸 질문 (키워드 리서치 결과 — 가능한 한 그대로 사용)',
+          '아래 질문들을 소제목으로 쓰고, 각 소제목 **바로 다음 문단**을',
+          '그 질문 하나에 대한 완결된 답변으로 써주세요.',
+          '그 문단만 떼어 읽어도 답이 되어야 합니다 (AI 브리핑은 이 단위로 인용합니다).',
+          '문장을 다듬는 건 괜찮지만 질문의 의도는 바꾸지 마세요.',
+          '',
+          ...questions.map((q, i) => `${i + 1}. ${q}`),
+        ].join('\n')
+      : '',
+    '',
+    provenHeadings && provenHeadings.length > 0
+      ? [
+          '# 이 블로그에서 실제로 성과가 났던 소제목 (참고용)',
+          '아래는 AI 브리핑 인용·체류시간이 높았던 글들의 소제목입니다.',
+          '문장 구조와 구체성의 수준을 참고하되, **내용을 베끼지 마세요.**',
+          '이번 글의 주제에 맞는 새 소제목을 만들어야 합니다.',
+          '',
+          ...provenHeadings.map((h) => `- ${h}`),
+        ].join('\n')
+      : '',
+    '',
     clientGuide && purchaseMeta.guidePriority
       ? `# 체험단 가이드 (최우선 반영 — 위 룰과 충돌 시 가이드 우선)\n${clientGuide}`
       : '',
@@ -935,6 +1059,116 @@ export function lintPostBody(
       message:
         '외부 공식 출처 링크가 없음 — 신뢰도(공식성) 신호로 1~2개 권장 (브랜드 공식몰/공식 정보 페이지)',
     });
+  }
+
+  // ── 2026 하반기 AI 인용 대응 검사 ────────────────────────────
+  // 근거: docs/rebuild-2026H2.md §2. 목표 지표가 "검색 순위"에서
+  // "AI 브리핑 인용"으로 이동하면서, 인용 단위(질문→자기완결 답변)와
+  // 최신성·이미지 컨텍스트가 실제 노출을 좌우하게 됐다.
+
+  // 13. 두괄식 — 소제목 바로 다음 문단이 대명사로 시작하면 청크가 잘렸을 때 의미를 잃는다
+  if (AI_BRIEFING_RULES.self_contained_answer.enabled) {
+    const lines13 = bodyOnly.split('\n');
+    const vagueStart =
+      /^(이건|이게|그건|그게|이렇게|그래서|근데|그리고|저는 이|여기서|이때|그때)\b/;
+    const offenders: string[] = [];
+
+    for (let i = 0; i < lines13.length; i++) {
+      const isHeading = /^#{2,6}\s+/.test(lines13[i]);
+      const isQuoteHeading =
+        /^>\s*\*\*/.test(lines13[i]) && !/^>\s*\*\*Q\./.test(lines13[i]);
+      if (!isHeading && !isQuoteHeading) continue;
+
+      // 소제목 다음의 첫 "본문" 줄 찾기 (빈 줄·사진·인용 건너뜀)
+      for (let j = i + 1; j < Math.min(i + 6, lines13.length); j++) {
+        const t = lines13[j].trim();
+        if (!t || t.startsWith('!') || t.startsWith('>') || t.startsWith('<!--')) continue;
+        if (vagueStart.test(t)) {
+          offenders.push(lines13[i].replace(/^[#>*\s]+/, '').slice(0, 30));
+        }
+        break;
+      }
+    }
+
+    if (offenders.length > 0) {
+      issues.push({
+        level: 'warning',
+        code: 'lead-with-answer',
+        message: `소제목 ${offenders.length}개의 첫 문단이 대명사로 시작 (${offenders.join(', ')}) — 주어를 문단 안에 다시 넣어야 RAG 청크로 잘려도 인용됨`,
+      });
+    }
+  }
+
+  // 14. 최신성 신호 — AI는 "언제 기준 정보인지"가 명시된 문서를 선호
+  const recencyRe =
+    /(20\d\d년\s*\d{1,2}월\s*(기준|현재)|20\d\d년\s*(기준|현재)|\d+\s*(주|개월|달)\s*(정도\s*)?(써|사용|먹여|발라|급여)|현재\s*기준)/;
+  if (!recencyRe.test(bodyOnly)) {
+    issues.push({
+      level: 'warning',
+      code: 'no-recency-signal',
+      message:
+        '최신성 신호가 없음 — "2026년 9월 기준", "5주 정도 써본 시점" 같은 표현 1회 권장',
+    });
+  }
+
+  // 15. 이미지 alt — 멀티모달 이전에 텍스트 컨텍스트가 인용을 좌우한다
+  const alts = [...bodyOnly.matchAll(/!\[([^\]]*)\]\(/g)].map((m) => m[1]);
+  const emptyAlts = alts.filter((a) => !a.trim()).length;
+  const shortAlts = alts.filter(
+    (a) => a.trim() && a.trim().length < AI_FRIENDLY_RULES.alt_chars.min,
+  ).length;
+
+  if (emptyAlts > 0) {
+    issues.push({
+      level: 'error',
+      code: 'alt-empty',
+      message: `alt가 빈 이미지 ${emptyAlts}장 — "무엇이 찍혔나"가 아니라 "이 사진이 왜 여기 있나"를 쓴다`,
+    });
+  }
+  if (shortAlts > 0) {
+    issues.push({
+      level: 'warning',
+      code: 'alt-too-short',
+      message: `alt가 ${AI_FRIENDLY_RULES.alt_chars.min}자 미만인 이미지 ${shortAlts}/${alts.length}장 — 상황·맥락까지 넣어 ${AI_FRIENDLY_RULES.alt_chars.min}~${AI_FRIENDLY_RULES.alt_chars.max}자 권장`,
+    });
+  }
+
+  // 16. frontmatter description — AI 답변 엔진이 미리보기/인용에 그대로 가져간다
+  const fmMatch = body.match(/^---\n([\s\S]*?)\n---/);
+  if (fmMatch) {
+    const descMatch = fmMatch[1].match(/^description:\s*["']?(.+?)["']?\s*$/m);
+    if (descMatch) {
+      const len = descMatch[1].length;
+      const { min, max } = AI_FRIENDLY_RULES.description_chars;
+      if (len < min || len > max) {
+        issues.push({
+          level: 'warning',
+          code: 'description-length',
+          message: `description ${len}자 — 권장 ${min}~${max}자 ([누가]+[무엇을]+[얼마나]+[결과] 한 문장)`,
+        });
+      }
+    }
+
+    // 17. AI 친화 필드가 본문과 어긋나지 않는지
+    //     구조화 데이터와 화면 내용의 불일치는 manual action 위험이다.
+    const hasFaqField = /^faq:/m.test(fmMatch[1]);
+    const hasFaqBody = /^>\s*\*\*Q\./m.test(bodyOnly);
+    if (hasFaqField && !hasFaqBody) {
+      issues.push({
+        level: 'error',
+        code: 'faq-schema-mismatch',
+        message:
+          'frontmatter에 faq가 있는데 본문에 FAQ 섹션이 없음 — 보이지 않는 내용을 스키마로 내보내면 안 됨',
+      });
+    }
+    if (hasFaqBody && !hasFaqField) {
+      issues.push({
+        level: 'warning',
+        code: 'faq-not-extracted',
+        message:
+          '본문 FAQ가 frontmatter에 없음 — npm run extract-ai-layer -- --write 로 승격 (FAQPage 스키마 출력용)',
+      });
+    }
   }
 
   return issues;

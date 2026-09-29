@@ -1,4 +1,6 @@
 ---
+import { CATEGORY_LABELS } from '../../scripts/lib/style-rules';
+
 interface Props {
   currentCategory?: string;
 }
@@ -7,11 +9,7 @@ const { currentCategory } = Astro.props;
 
 const categories = [
   { value: 'all', label: '전체' },
-  { value: 'baby-products', label: '육아용품 리뷰' },
-  { value: 'parenting', label: '육아일기' },
-  { value: 'daily-life', label: '일상' },
-  { value: 'food', label: '맛집/요리' },
-  { value: 'travel', label: '여행/나들이' },
+  ...Object.entries(CATEGORY_LABELS).map(([value, label]) => ({ value, label })),
 ];
 ---
 

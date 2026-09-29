@@ -25,6 +25,18 @@ images:
   - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776080701/blog/2026/04/2026-04-13-petinube-hip-cleanser/gif_14.gif"
 sponsored: false
 productLink: "https://smartstore.naver.com/petinube/products/12964021865"
+tldr: "아기 엉덩이는 비누보다 펌핑 거품 타입이 훨씬 편하고 위생적이었어요."
+faq:
+  - q: "아기엉덩이클렌저는 물로 헹궈야 하나요?"
+    a: "아니요, 거품으로 닦고 물티슈로 한 번 마무리하면 끝이에요. 그게 비누랑 제일 큰 차이였어요."
+  - q: "신생아도 쓸 수 있나요?"
+    a: "저는 봄이 신생아 때부터 썼어요. 더마테스트 인증 제품이라 마음이 놓이더라구요."
+  - q: "비누보다 정말 편한가요?"
+    a: "한 손으로 아기 다리 잡고 다른 손으로 펌핑이 되니까 확실히 편해요. 욕실까지 안 가도 되구요."
+  - q: "하루에 몇 번까지 써도 되나요?"
+    a: "저희는 대변 볼 때마다 쓰는데 봄이 피부에 트러블은 없었어요."
+  - q: "휴대용은 얼마나 오래 쓰나요?"
+    a: "45ml라 외출용으론 넉넉해요. 다 쓰면 본품에서 덜어 담아 쓰고 있어요."
 draft: false
 ---
 

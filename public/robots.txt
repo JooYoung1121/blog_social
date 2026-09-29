@@ -1,4 +1,8 @@
 User-agent: *
 Allow: /
 
+# AI/LLM 크롤러용 사이트 요약 (https://llmstxt.org/)
+# 네이버 블로그 원본은 외부 크롤러가 못 읽으므로, 이 사이트가 유일한 경로다.
+# llms.txt: https://jinas-holiday.vercel.app/llms.txt
+
 Sitemap: https://jinas-holiday.vercel.app/sitemap-index.xml

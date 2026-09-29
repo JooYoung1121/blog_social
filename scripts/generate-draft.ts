@@ -1,7 +1,7 @@
 /**
  * generate-draft.ts
  *
- * AI 글 자동 생성 — Claude Opus 4.7 (1M context).
+ * AI 글 자동 생성 — Claude Opus 5 (1M context).
  *
  * 흐름:
  *   1. input/{slug}/ 폴더에서 topic, purchase, keywords, notes, photos 읽기
@@ -9,7 +9,7 @@
  *   3. style-rules.ts의 buildSystemPrompt() 로 룰 100% 반영된 시스템 프롬프트 생성
  *      → ephemeral 캐시 (매 요청마다 같은 프롬프트 → 90% 비용 절감)
  *   4. 사진을 멀티모달 입력으로 같이 보냄 (Claude가 사진을 보고 정확한 캡션 작성)
- *   5. Claude Opus 4.7 (adaptive thinking + xhigh effort) 호출 (streaming)
+ *   5. Claude Opus 5 (adaptive thinking + effort) 호출 (streaming)
  *   6. 마크다운 추출 → src/content/posts/YYYY/MM/{slug}.md 저장
  *   7. lint 자동 실행 (룰 위반 검사)
  *
@@ -30,12 +30,20 @@ import {
   type PurchaseType,
 } from './lib/style-rules.js';
 import { processAndUpload, type UploadResult } from './upload-images.js';
+import {
+  DRAFT_MODEL,
+  MAX_TOKENS,
+  effortFor,
+  cacheControl,
+} from './lib/model.js';
+import { topPerformers } from './lib/performance.js';
 
 interface DraftConfig {
   inputDir: string;
   category: string;
   model?: string;
   noTone?: boolean;
+  longSession?: boolean;
   intent?: 'review' | 'compare' | 'info' | 'location' | 'diary';
   target?: 'search' | 'homefeed' | 'both';
 }
@@ -66,6 +74,9 @@ function parseArgs(): DraftConfig {
       case '--no-tone':
         config.noTone = true;
         break;
+      case '--long-session':
+        config.longSession = true;
+        break;
     }
   }
   if (!config.inputDir) {
@@ -75,12 +86,13 @@ function parseArgs(): DraftConfig {
 
 필수:
   --input <dir>           입력 디렉토리 (topic.txt, photos/ 등 포함)
-  --category <category>   baby-products | parenting | daily-life | food | travel
+  --category <category>   baby-products | parenting | pet | daily-life | food | travel
 
 옵션:
   --intent <intent>       review | compare | info | location | diary (기본: review)
   --target <target>       search | homefeed | both (기본: search)
-  --model <model-id>      claude-opus-4-7 (기본) | claude-sonnet-4-6 등
+  --model <model-id>      claude-opus-5 (기본) | claude-sonnet-5 등
+  --long-session          프롬프트 캐시 TTL 1시간 (연속 여러 편 생성 시)
   --no-tone               사진 톤 보정 비활성화
 
 환경변수:
@@ -111,6 +123,15 @@ async function readInputs(dir: string) {
   const productUrl = await readOpt(dir, 'product-url.txt');
   const sponsor = await readOpt(dir, 'sponsor.txt');
   const guide = await readOpt(dir, 'client-guide.md');
+
+  // npm run keywords 가 만들어 둔 질문형 소제목 (있으면 그대로 소제목이 된다)
+  const questionsRaw = await readOpt(dir, 'questions.txt');
+  const questions = questionsRaw
+    ? questionsRaw
+        .split('\n')
+        .map((l) => l.replace(/^[-*\d.)\s]+/, '').trim())
+        .filter((l) => l && !l.startsWith('#'))
+    : [];
 
   let mainKeyword: string | undefined;
   let subKeywords: string[] = [];
@@ -144,7 +165,33 @@ async function readInputs(dir: string) {
     productUrl,
     sponsor,
     clientGuide: guide,
+    questions,
   };
+}
+
+/**
+ * 성과 상위 글의 소제목을 few-shot 으로 뽑는다.
+ * data/performance.csv 가 비어 있으면 빈 배열 → 프롬프트에 섹션이 안 붙는다.
+ */
+async function loadProvenHeadings(limit = 8): Promise<string[]> {
+  const top = await topPerformers(3);
+  if (top.length === 0) return [];
+
+  const base = path.resolve('src/content/posts');
+  const headings: string[] = [];
+  for (const row of top) {
+    try {
+      const raw = await fs.readFile(path.join(base, `${row.slug}.md`), 'utf-8');
+      for (const m of raw.matchAll(/^#{2,6}\s+(.+)$/gm)) {
+        const h = m[1].trim();
+        if (/자주 묻는 질문/.test(h)) continue;
+        headings.push(h);
+      }
+    } catch {
+      // 성과 CSV 의 slug 가 실제 파일과 안 맞는 경우 — 조용히 건너뜀
+    }
+  }
+  return headings.slice(0, limit);
 }
 
 function generateSlug(title: string): string {
@@ -189,6 +236,10 @@ function buildUserPrompt(
       ``,
       `## 출력 형식`,
       '아래 정확한 마크다운 형식으로만 출력해주세요. ```markdown 코드블록 안에 frontmatter + 본문을 넣고, 다른 설명은 일체 금지합니다.',
+      '',
+      '⚠️ frontmatter의 tldr / faq 는 본문에 실제로 쓴 내용과 **글자 그대로 일치**해야 합니다.',
+      '   이 필드들은 JSON-LD 구조화 데이터로 출력되는데, 화면에 없는 내용을 스키마로 내보내면 검색엔진 제재 대상입니다.',
+      '   brand / product / certifications 는 확실히 아는 것만 적고, 모르면 그 줄을 지우세요. 추측해서 채우지 마세요.',
       ``,
       '```markdown',
       '---',
@@ -201,6 +252,13 @@ function buildUserPrompt(
       `purchaseType: ${inputs.purchaseType}`,
       `intent: ${config.intent || 'review'}`,
       `target: ${config.target || 'search'}`,
+      'tldr: "한 줄 요약 (본문 TL;DR 첫 줄과 같은 문장)"',
+      'brand: "브랜드 정식명 (모르면 이 줄 삭제)"',
+      'product: "제품 정식명 (모르면 이 줄 삭제)"',
+      'certifications: ["인증명"]  # 없으면 이 줄 삭제. 가격/수량/사이즈는 절대 금지',
+      'faq:',
+      '  - q: "질문"',
+      '    a: "답변 (본문 FAQ 섹션과 반드시 동일한 내용)"',
       `thumbnail: "${images[0]?.cloudinaryUrl || ''}"`,
       'images:',
       ...images.map((img) => `  - "${img.cloudinaryUrl}"`),
@@ -289,6 +347,14 @@ async function main() {
   }
 
   // 3) 시스템 프롬프트 (캐시됨)
+  const provenHeadings = await loadProvenHeadings();
+  if (inputs.questions.length > 0) {
+    console.log(`\n🎯 질문형 소제목 ${inputs.questions.length}개 (questions.txt)`);
+  }
+  if (provenHeadings.length > 0) {
+    console.log(`📈 성과 상위 글 소제목 ${provenHeadings.length}개를 예시로 주입`);
+  }
+
   const systemPrompt = buildSystemPrompt({
     category: config.category,
     purchaseType: inputs.purchaseType,
@@ -299,13 +365,16 @@ async function main() {
     subKeywords: inputs.subKeywords,
     notes: inputs.notes,
     clientGuide: inputs.clientGuide,
+    questions: inputs.questions,
+    provenHeadings,
   });
   console.log(`\n🧠 시스템 프롬프트: ${systemPrompt.length}자 (ephemeral 캐시 적용)`);
 
   // 4) Claude 호출
   const client = new Anthropic();
-  const model = config.model || 'claude-opus-4-7';
-  console.log(`🤖 모델: ${model}`);
+  const model = config.model || DRAFT_MODEL;
+  const effort = effortFor(images.length);
+  console.log(`🤖 모델: ${model} (effort: ${effort})`);
   console.log(`📤 호출 중... (streaming)\n`);
   console.log('─'.repeat(60));
 
@@ -313,14 +382,14 @@ async function main() {
 
   const stream = client.messages.stream({
     model,
-    max_tokens: 16000,
+    max_tokens: MAX_TOKENS,
     thinking: { type: 'adaptive' },
-    output_config: { effort: 'high' },
+    output_config: { effort },
     system: [
       {
         type: 'text',
         text: systemPrompt,
-        cache_control: { type: 'ephemeral' },
+        cache_control: cacheControl(config.longSession),
       },
     ],
     messages,

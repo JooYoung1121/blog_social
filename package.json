@@ -14,7 +14,11 @@
     "upload-images": "tsx scripts/upload-images.ts",
     "generate-draft": "tsx scripts/generate-draft.ts",
     "lint:posts": "tsx scripts/lint-posts.ts",
-    "suggest-links": "tsx scripts/suggest-links.ts"
+    "suggest-links": "tsx scripts/suggest-links.ts",
+    "keywords": "tsx scripts/keyword-research.ts",
+    "extract-ai-layer": "tsx scripts/extract-ai-layer.ts",
+    "perf-report": "tsx scripts/perf-report.ts",
+    "refresh": "tsx scripts/refresh-candidates.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.1",

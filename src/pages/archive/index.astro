@@ -1,19 +1,14 @@
 ---
 export const prerender = true;
 
+import { CATEGORY_LABELS } from '../../../scripts/lib/style-rules';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
 
 const posts = (await getCollection('posts', ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
-const categoryLabels: Record<string, string> = {
-  'baby-products': '육아용품 리뷰',
-  parenting: '육아일기',
-  'daily-life': '일상',
-  food: '맛집/요리',
-  travel: '여행/나들이',
-};
+const categoryLabels = CATEGORY_LABELS;
 
 // Group by year-month
 const grouped = posts.reduce(

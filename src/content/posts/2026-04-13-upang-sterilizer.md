@@ -26,6 +26,18 @@ images:
   - "https://res.cloudinary.com/diztnbres/image/upload/f_auto,q_auto/v1776087167/blog/2026/04/2026-04-13-upang-sterilizer/photo_18.jpg"
 sponsored: false
 productLink: "https://brand.naver.com/upangkorea/products/10648644602"
+tldr: "젖병소독기는 살균만 되는 것보다 건조·보관까지 자동인 쪽이 훨씬 편했어요."
+faq:
+  - q: "젖병소독기는 UV랑 스팀 중 뭐가 편한가요?"
+    a: "저는 UV 쪽이 편했어요. 스팀은 매번 물을 채우고 비워야 하는데 그게 은근 일이거든요."
+  - q: "젖병 몇 개까지 들어가나요?"
+    a: "240ml 젖병 8개에 젖꼭지랑 뚜껑까지 넣고도 자리가 남았어요."
+  - q: "소독 후에 바로 안 꺼내도 되나요?"
+    a: "자동으로 보관 모드로 넘어가서 다음에 꺼낼 때까지 그대로 둬요. 저는 거의 그렇게 써요."
+  - q: "밤에 돌리면 시끄럽지 않나요?"
+    a: "무음 모드랑 밝기 조절이 있어서 새벽 수유 때도 돌려요."
+  - q: "처음 쓸 때 주의할 점이 있나요?"
+    a: "내부 유리에 붙은 보호필름을 꼭 떼세요. 저는 하마터면 그냥 쓸 뻔했어요 ㅋㅋ"
 draft: false
 ---
 

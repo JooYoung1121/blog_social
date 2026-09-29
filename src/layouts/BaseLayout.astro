@@ -12,6 +12,13 @@ interface Props {
   publishedDate?: Date;
   updatedDate?: Date;
   tags?: string[];
+  categoryLabel?: string;
+  tldr?: string;
+  faq?: { q: string; a: string }[];
+  brand?: string;
+  product?: string;
+  certifications?: string[];
+  productLink?: string;
 }
 
 const {
@@ -22,6 +29,13 @@ const {
   publishedDate,
   updatedDate,
   tags = [],
+  categoryLabel,
+  tldr,
+  faq,
+  brand,
+  product,
+  certifications,
+  productLink,
 } = Astro.props;
 ---
 
@@ -36,6 +50,13 @@ const {
       publishedDate={publishedDate}
       updatedDate={updatedDate}
       tags={tags}
+      categoryLabel={categoryLabel}
+      tldr={tldr}
+      faq={faq}
+      brand={brand}
+      product={product}
+      certifications={certifications}
+      productLink={productLink}
     />
   </head>
   <body>

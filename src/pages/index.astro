@@ -1,6 +1,7 @@
 ---
 export const prerender = true;
 
+import { CATEGORY_LABELS } from '../../scripts/lib/style-rules';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PostCard from '../components/PostCard.astro';
 import { getCollection } from 'astro:content';
@@ -11,13 +12,7 @@ const posts = (await getCollection('posts', ({ data }) => !data.draft))
 const featured = posts[0];
 const rest = posts.slice(1);
 
-const categoryLabels: Record<string, string> = {
-  'baby-products': '육아용품 리뷰',
-  parenting: '육아일기',
-  'daily-life': '일상',
-  food: '맛집/요리',
-  travel: '여행/나들이',
-};
+const categoryLabels = CATEGORY_LABELS;
 
 const categoryCounts = posts.reduce<Record<string, number>>((acc, p) => {
   acc[p.data.category] = (acc[p.data.category] || 0) + 1;

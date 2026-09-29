@@ -1,4 +1,5 @@
 ---
+import { CATEGORY_LABELS } from '../../scripts/lib/style-rules';
 import { getCollection } from 'astro:content';
 
 interface Props {
@@ -25,13 +26,7 @@ const scored = allPosts
   .sort((a, b) => b.score - a.score || b.post.data.date.valueOf() - a.post.data.date.valueOf())
   .slice(0, 3);
 
-const categoryLabels: Record<string, string> = {
-  'baby-products': '육아용품 리뷰',
-  parenting: '육아일기',
-  'daily-life': '일상',
-  food: '맛집/요리',
-  travel: '여행/나들이',
-};
+const categoryLabels = CATEGORY_LABELS;
 ---
 
 {scored.length > 0 && (

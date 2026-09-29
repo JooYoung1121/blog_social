@@ -14,6 +14,8 @@ import path from 'path';
 import { glob } from 'glob';
 import {
   lintPostBody,
+  inferPurchaseType,
+  PUBLISHING_RHYTHM,
   type LintIssue,
   type PurchaseType,
 } from './lib/style-rules.js';
@@ -22,8 +24,88 @@ interface PostReport {
   file: string;
   mainKeyword?: string;
   purchaseType?: PurchaseType;
+  date?: string;
+  category?: string;
+  headings: string[];
   errors: LintIssue[];
   warnings: LintIssue[];
+}
+
+/**
+ * 한 파일만 봐서는 못 잡는 검사 (발행 리듬 / 유사문서 리스크).
+ *
+ * 왜 필요한가: 네이버는 AI 대량 발행 저품질 블로그에 대한 제재를 강화하는
+ * 흐름이고, 같은 구조·같은 주제를 연속 발행하면 유사문서로 판정될 위험이 있다.
+ * 자동화를 붙일수록 사람이 눈치채기 어려워지므로 lint가 대신 본다.
+ *   근거: 뉴스버스 "AI 따발총 저품질 블로그글, 네이버 제재 강화 방침"
+ *         https://www.newsverse.kr/news/articleView.html?idxno=9959
+ *         scripts/lib/style-rules.ts PUBLISHING_RHYTHM
+ */
+function lintAcrossPosts(reports: PostReport[]): string[] {
+  const notes: string[] = [];
+
+  // 1) 하루 발행량
+  const byDate = new Map<string, string[]>();
+  for (const r of reports) {
+    if (!r.date) continue;
+    const list = byDate.get(r.date) ?? [];
+    list.push(path.basename(r.file));
+    byDate.set(r.date, list);
+  }
+  for (const [date, files] of [...byDate].sort()) {
+    if (files.length > PUBLISHING_RHYTHM.per_day_max) {
+      notes.push(
+        `발행 리듬: ${date}에 ${files.length}편 — 하루 최대 ${PUBLISHING_RHYTHM.per_day_max}편 권장`,
+      );
+    }
+  }
+
+  // 2) 같은 카테고리 연속 발행 (날짜순)
+  const sorted = reports
+    .filter((r) => r.date && r.category)
+    .sort((a, b) => a.date!.localeCompare(b.date!));
+  let run = 1;
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i].category === sorted[i - 1].category) {
+      run++;
+      if (run === 4) {
+        notes.push(
+          `유사문서 리스크: "${sorted[i].category}" 카테고리가 ${run}편 연속 (~${sorted[i].date}) — 사이에 다른 축의 글을 끼우는 게 안전`,
+        );
+      }
+    } else {
+      run = 1;
+    }
+  }
+
+  // 3) 소제목 구조 중복 — 직전 글들과 소제목이 과하게 겹치면 템플릿 티가 난다
+  for (let i = 1; i < sorted.length; i++) {
+    const cur = new Set(sorted[i].headings);
+    if (cur.size < 3) continue;
+    for (let j = Math.max(0, i - 3); j < i; j++) {
+      const prev = new Set(sorted[j].headings);
+      if (prev.size < 3) continue;
+      const overlap = [...cur].filter((h) => prev.has(h)).length;
+      const ratio = overlap / Math.min(cur.size, prev.size);
+      if (ratio >= 0.6) {
+        notes.push(
+          `구조 중복: ${path.basename(sorted[i].file)} 와 ${path.basename(sorted[j].file)} 의 소제목이 ${Math.round(ratio * 100)}% 동일 — 소제목을 글마다 다르게`,
+        );
+        break;
+      }
+    }
+  }
+
+  return notes;
+}
+
+/** FAQ 헤딩 등 반복되는 고정 소제목은 중복 판정에서 제외 */
+const GENERIC_HEADINGS = /자주 묻는 질문|한 줄 요약/;
+
+function extractHeadings(body: string): string[] {
+  return [...body.matchAll(/^#{2,6}\s+(.+)$/gm)]
+    .map((m) => m[1].trim())
+    .filter((h) => !GENERIC_HEADINGS.test(h));
 }
 
 function parseFrontmatter(text: string): Record<string, string> {
@@ -35,16 +117,6 @@ function parseFrontmatter(text: string): Record<string, string> {
     if (m) result[m[1]] = m[2].replace(/^["']|["']$/g, '');
   }
   return result;
-}
-
-function inferPurchaseType(
-  fm: Record<string, string>,
-): PurchaseType | undefined {
-  if (fm.purchaseType) return fm.purchaseType as PurchaseType;
-  // legacy sponsored 필드로 추정 (true면 sponsored, false면 self-purchased)
-  if (fm.sponsored === 'true') return 'sponsored';
-  if (fm.sponsored === 'false') return 'self-purchased';
-  return undefined;
 }
 
 async function lintFile(filePath: string): Promise<PostReport> {
@@ -62,6 +134,9 @@ async function lintFile(filePath: string): Promise<PostReport> {
     file: filePath,
     mainKeyword: fm.mainKeyword,
     purchaseType,
+    date: fm.date,
+    category: fm.category,
+    headings: extractHeadings(content),
     errors: issues.filter((i) => i.level === 'error'),
     warnings: issues.filter((i) => i.level === 'warning'),
   };
@@ -107,6 +182,15 @@ async function main() {
     for (const w of r.warnings) {
       console.log(`   ⚠️  [${w.code}] ${w.message}`);
       totalWarnings++;
+    }
+  }
+
+  // 전체를 가로질러 봐야 보이는 문제 (파일 하나만 검사할 땐 생략)
+  if (!targetArg) {
+    const crossNotes = lintAcrossPosts(reports);
+    if (crossNotes.length > 0) {
+      console.log('\n🔁 발행 패턴 검사');
+      for (const n of crossNotes) console.log(`   ⚠️  ${n}`);
     }
   }
 

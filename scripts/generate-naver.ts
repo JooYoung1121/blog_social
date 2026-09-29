@@ -1,3 +1,4 @@
+import { CATEGORY_LABELS } from './lib/style-rules.js';
 import fs from 'fs/promises';
 import path from 'path';
 import type { UploadResult } from './upload-images.js';
@@ -13,13 +14,7 @@ interface NaverGuideConfig {
   notes?: string;
 }
 
-const categoryLabels: Record<string, string> = {
-  'baby-products': '육아용품 리뷰',
-  parenting: '육아일기',
-  'daily-life': '일상',
-  food: '맛집/요리',
-  travel: '여행/나들이',
-};
+const categoryLabels = CATEGORY_LABELS;
 
 export async function generateNaverGuide(config: NaverGuideConfig): Promise<string> {
   const { title, category, sponsored, sponsorInfo, productLink, images, slug, notes } = config;

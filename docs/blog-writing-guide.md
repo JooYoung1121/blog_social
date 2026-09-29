@@ -198,6 +198,53 @@
 > [행머니 "네이버 AI 글 판별 기준"](https://moneyroan.com/naver-ai-content-detection-criteria/)
 > 코드 반영: `scripts/lib/style-rules.ts`의 `AI_BRIEFING_RULES`, `CLIP_RULES`, `PUBLISHING_RHYTHM`.
 
+### 2026-09 업데이트 — 키워드 단위가 "단어"에서 "질문"으로
+
+목표 지표가 순위에서 **AI 브리핑 인용수**로 이동했다는 건, 키워드를 잡는 단위가 바뀌었다는 뜻이다.
+AI 브리핑은 "질문 → 그 문단만 읽어도 답이 되는 답변" 덩어리로 글을 잘라 인용한다.
+
+| 구분 | ~2025 | 2026 하반기 |
+|---|---|---|
+| 키워드 단위 | 명사구 ("실온이유식") | 질문 ("중기이유식 실온보관 괜찮나요") |
+| 선정 기준 | 검색량 | **기회점수 = 검색량 ÷ 문서수** |
+| 배치 | 본문 5~7회 반복 | 소제목 = 질문, 첫 문단 = 정의형 답 |
+| 확장 소스 | 연관검색어 (2026-04-30 종료) | 검색광고 API + AI탭 후속질문 + 자동완성 |
+| 성공 측정 | 검색 순위 | AI 브리핑 출처 카드 등장 여부 |
+
+**키워드 3층 구조 (운영 규칙):**
+
+1. **허브 키워드 (C-rank 축)** — 육아 / 반려견 2축. 여기에 글이 누적돼야 전문성 점수가 붙는다.
+   축 정의는 `scripts/lib/style-rules.ts` 의 `HUB_AXES`.
+2. **메인 키워드 (글 1편 = 1개)** — 기회점수 상위. `npm run keywords` 가 뽑아준다.
+3. **질문 키워드 (소제목 4~6개 = 질문 4~6개)** — `input/<slug>/questions.txt`.
+   **AI 브리핑 인용은 이 단위에서 일어난다.**
+
+**질문 만드는 법:** "상황 + 대상 + 판단"으로 조립한다.
+- ❌ "이유식 보관법"
+- ✅ "7개월 아기 외출할 때 이유식 어떻게 챙기나요"
+
+육아용품처럼 문서수가 많은 영역은 기회점수가 낮게 나온다. 이때는 조합 2단계 이상
+(제품군 + 상황 + 월령)으로 내려간다. `npm run keywords` 가 그 판단을 수치로 보여준다.
+
+> 근거: [PageOne Works — 네이버 AI 브리핑 2026](https://www.pageoneworks.com/article/naver-ai-briefing-optimization-guide-2026) ·
+> [SEO Korea — 네이버 AI 브리핑·AI 탭 정리 2026](https://seo.co.kr/blog/what-is-naver-ai/) ·
+> [원포인트 — AI 브리핑에 인용되는 콘텐츠 설계법](https://1point.kr/blog/insights/naver-ai-briefing-content-design/)
+> 코드 반영: `scripts/keyword-research.ts`, `style-rules.ts` 의 `HUB_AXES` / `PromptOptions.questions`
+
+### 자동 검사되는 항목 (lint)
+
+아래는 `npm run lint:posts` 가 잡는다. 사람이 매번 확인하지 않아도 된다.
+
+| 코드 | 검사 |
+|---|---|
+| `lead-with-answer` | 소제목 다음 문단이 대명사("이건","그게")로 시작 — 청크가 잘리면 의미를 잃는다 |
+| `no-recency-signal` | "2026년 ○월 기준" 류 최신성 표현 없음 |
+| `alt-empty` / `alt-too-short` | 이미지 alt 누락 / 50자 미만 |
+| `description-length` | frontmatter description 80~150자 밖 |
+| `faq-schema-mismatch` | frontmatter faq 와 본문 FAQ 불일치 (**에러** — 검색엔진 제재 위험) |
+| `faq-not-extracted` | 본문 FAQ 가 frontmatter 에 없음 (JSON-LD 미출력 상태) |
+| 발행 패턴 | 하루 2편 초과 / 같은 카테고리 4편 연속 / 소제목 60% 이상 중복 |
+
 ### 제목
 - 핵심 키워드를 변형 없이 제목 앞쪽 배치
 - 25자 이내 권장 (모바일 노출 35자 한계)

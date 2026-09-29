@@ -4,7 +4,7 @@ export const prerender = true;
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PostCard from '../../components/PostCard.astro';
-import { CATEGORY_META } from '../../../scripts/lib/style-rules';
+import { CATEGORY_META, HUB_AXES, hubOf } from '../../../scripts/lib/style-rules';
 
 export async function getStaticPaths() {
   const posts = await getCollection('posts', ({ data }) => !data.draft);
@@ -22,7 +22,53 @@ export async function getStaticPaths() {
 }
 
 const { category, posts } = Astro.props;
-const meta = CATEGORY_META[category] || { label: category, description: '' };
+const meta = CATEGORY_META[category] || {
+  label: category,
+  description: '',
+  emoji: '',
+  hub: 'other' as const,
+};
+const axis = hubOf(category);
+const hub = HUB_AXES[axis];
+
+// 이 카테고리에서 실제로 다룬 주제어 (태그 빈도 상위).
+// C-rank는 "한 주제를 얼마나 깊이 다뤘나"를 본다고 알려져 있어,
+// 허브 페이지에 주제 범위를 명시해 두면 사람도 AI도 축을 파악하기 쉽다.
+const tagCounts = new Map<string, number>();
+for (const p of posts) {
+  for (const t of p.data.tags) tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1);
+}
+const topTags = [...tagCounts.entries()]
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 12)
+  .map(([t]) => t);
+
+const dates = posts.map((p) => p.data.date.valueOf());
+const since = dates.length ? new Date(Math.min(...dates)) : null;
+const latest = dates.length ? new Date(Math.max(...dates)) : null;
+const fmt = (d: Date) =>
+  d.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' });
+
+// 허브 페이지가 이 카테고리 글들을 묶는 컬렉션임을 명시
+const collectionLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: `${meta.label} — 지나의 휴일`,
+  description: meta.description,
+  url: new URL(Astro.url.pathname, 'https://jinas-holiday.vercel.app').href,
+  inLanguage: 'ko-KR',
+  about: topTags.map((t) => ({ '@type': 'Thing', name: t })),
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: posts.length,
+    itemListElement: posts.map((p, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `https://jinas-holiday.vercel.app/posts/${p.id}`,
+      name: p.data.title,
+    })),
+  },
+};
 ---
 
 <BaseLayout
@@ -30,10 +76,20 @@ const meta = CATEGORY_META[category] || { label: category, description: '' };
   description={`${meta.label} — ${meta.description}`}
 >
   <section class="category-header container">
-    <p class="eyebrow">카테고리</p>
-    <h1>{meta.label}</h1>
+    <p class="eyebrow">{hub.isCore ? `${hub.label} \u00b7 주력 주제` : '카테고리'}</p>
+    <h1>{meta.emoji} {meta.label}</h1>
     {meta.description && <p class="desc">{meta.description}</p>}
-    <p class="count">총 {posts.length}개의 글</p>
+    <p class="count">
+      총 {posts.length}개의 글
+      {since && latest && ` \u00b7 ${fmt(since)}부터 ${fmt(latest)}까지`}
+    </p>
+    {topTags.length > 0 && (
+      <ul class="hub-tags" aria-label="이 카테고리에서 다룬 주제">
+        {topTags.map((t) => (
+          <li><a href={`/tag/${t}`}>{t}</a></li>
+        ))}
+      </ul>
+    )}
   </section>
 
   <section class="posts-grid container">
@@ -51,6 +107,7 @@ const meta = CATEGORY_META[category] || { label: category, description: '' };
       ))}
     </div>
   </section>
+  <script type="application/ld+json" set:html={JSON.stringify(collectionLd)} is:inline />
 </BaseLayout>
 
 <style>
@@ -81,6 +138,31 @@ const meta = CATEGORY_META[category] || { label: category, description: '' };
     margin-top: 0.5rem;
     font-size: 0.85rem;
     color: var(--color-text-light);
+  }
+
+  .hub-tags {
+    list-style: none;
+    padding: 0;
+    margin: 1rem auto 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    justify-content: center;
+    max-width: 44rem;
+  }
+
+  .hub-tags a {
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    background: var(--color-bg-alt, rgba(0, 0, 0, 0.05));
+    color: var(--color-text-light);
+    font-size: 0.8rem;
+    text-decoration: none;
+  }
+
+  .hub-tags a:hover {
+    color: var(--color-accent);
   }
 
   .posts-grid {

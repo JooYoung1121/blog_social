@@ -1,5 +1,6 @@
 ---
 // Client-side search dialog
+import { CATEGORY_LABELS } from '../../scripts/lib/style-rules';
 import { getCollection } from 'astro:content';
 
 const posts = (await getCollection('posts', ({ data }) => !data.draft))
@@ -12,6 +13,8 @@ const posts = (await getCollection('posts', ({ data }) => !data.draft))
     tags: p.data.tags,
     date: p.data.date.toISOString().slice(0, 10),
   }));
+
+const categoryLabels = CATEGORY_LABELS;
 ---
 
 <button class="search-trigger" id="search-trigger" aria-label="검색">
@@ -34,7 +37,7 @@ const posts = (await getCollection('posts', ({ data }) => !data.draft))
   </div>
 </dialog>
 
-<script define:vars={{ posts }}>
+<script define:vars={{ posts, categoryLabels }}>
   document.addEventListener('DOMContentLoaded', () => {
     const trigger = document.getElementById('search-trigger');
     const dialog = document.getElementById('search-dialog');
@@ -42,14 +45,6 @@ const posts = (await getCollection('posts', ({ data }) => !data.draft))
     const results = document.getElementById('search-results');
     const closeBtn = document.getElementById('search-close');
     if (!trigger || !dialog || !input || !results || !closeBtn) return;
-
-    const categoryLabels = {
-      'baby-products': '육아용품 리뷰',
-      parenting: '육아일기',
-      'daily-life': '일상',
-      food: '맛집/요리',
-      travel: '여행/나들이',
-    };
 
     function open() {
       dialog.showModal();
